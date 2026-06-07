@@ -119,6 +119,21 @@
       "poll_id": null,
       "poll_message_id": null,
       "locked": false
+    },
+    "TS068": {
+      "home_team": "Niger",
+      "away_team": "Mauritania",
+      "kickoff": "2026-06-09T02:00:00+07:00",
+      "round": "group",
+      "handicap": 0.0,
+      "home_odds": 2.75,
+      "away_odds": 2.75,
+      "bookmaker": "Thu cong",
+      "has_draw_option": true,
+      "result": null,
+      "poll_id": null,
+      "poll_message_id": null,
+      "locked": false
     }
   },
   "predictions": {
