@@ -103,7 +103,7 @@
       "result": null,
       "poll_id": "6138606008085251003",
       "poll_message_id": 27,
-      "locked": false
+      "locked": true
     }
   },
   "predictions": {
