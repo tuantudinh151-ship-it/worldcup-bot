@@ -52,11 +52,63 @@ if not BOT_TOKEN or not GROUP_ID or not ADMIN_ID:
     exit(1)
 # ============================================================
 
+def build_rules() -> str:
+    return (
+        "<b>🏆 WORLD CUP 2026 — THỂ LỆ DỰ ĐOÁN 🏆</b>\n\n"
+        "Chào mừng bạn tham gia nhóm dự đoán kết quả World Cup 2026!\n\n"
+        "━━━━━━━━━━━━━━━━━━━━\n\n"
+        "<b>📋 CÁCH THAM GIA</b>\n"
+        "Gõ /join trong nhóm để đăng ký (chỉ làm 1 lần)\n\n"
+        "━━━━━━━━━━━━━━━━━━━━\n\n"
+        "<b>⚽ CÁCH BÌNH CHỌN</b>\n"
+        "Bot tự động gửi poll trước mỗi trận <b>20 tiếng</b>\n"
+        "Poll được ghim lên đầu nhóm để dễ thấy\n\n"
+        "Mỗi poll có 2 hoặc 3 lựa chọn:\n"
+        "• <b>TRÊN</b> — đội chấp thắng kèo\n"
+        "• <b>DƯỚI</b> — đội được chấp thắng kèo\n"
+        "• <b>HÒA</b> — chỉ xuất hiện với kèo chẵn (0, 1, 2 trái)\n\n"
+        "✅ Được đổi ý cho đến khi poll khóa\n"
+        "🔒 Poll tự động khóa đúng giờ bóng lăn\n\n"
+        "━━━━━━━━━━━━━━━━━━━━\n\n"
+        "<b>🎯 KÈO CHÂU Á — CÁCH ĐỌC</b>\n"
+        "Ví dụ: <b>Brazil chấp Argentina 0.5 trái</b>\n"
+        "→ Brazil phải thắng ít nhất 1 trái mới thắng kèo\n"
+        "→ Nếu hòa hoặc Argentina thắng → DƯỚI thắng kèo\n\n"
+        "Ví dụ: <b>France chấp Germany 1 trái</b> (kèo chẵn)\n"
+        "→ France thắng 2+ trái → TRÊN thắng\n"
+        "→ France thắng đúng 1 trái → HÒA kèo\n"
+        "→ Hòa hoặc Germany thắng → DƯỚI thắng\n\n"
+        "━━━━━━━━━━━━━━━━━━━━\n\n"
+        "<b>💸 PHÍ THUA CUỘC</b>\n"
+        "• Vòng bảng: <b>50.000đ/trận</b>\n"
+        "• Vòng loại trực tiếp: <b>100.000đ/trận</b>\n"
+        "• Chung kết: <b>200.000đ/trận</b>\n\n"
+        "⚠️ <b>Không bình chọn = tính thua</b>\n"
+        "Tiền nợ được tổng hợp tự động, admin thông báo khi cần đóng\n\n"
+        "━━━━━━━━━━━━━━━━━━━━\n\n"
+        "<b>📊 LỆNH HỮU ÍCH</b>\n"
+        "/matches — Xem trận sắp tới\n"
+        "/standings — Bảng xếp hạng nợ\n"
+        "/mypredictions — Lịch sử bình chọn của bạn\n"
+        "/myrules — Xem lại thể lệ này\n\n"
+        "━━━━━━━━━━━━━━━━━━━━\n\n"
+        "<b>🤖 KẾT QUẢ &amp; TÍNH TIỀN</b>\n"
+        "Sau mỗi trận, bot tự động:\n"
+        "✔️ Lấy kết quả từ nhà cái\n"
+        "✔️ Tính thắng/thua theo kèo\n"
+        "✔️ Thông báo vào nhóm\n"
+        "✔️ Cập nhật bảng nợ\n\n"
+        "Chúc mọi người may mắn! 🍀"
+    )
+
+RULES_TEXT = build_rules()
+RULES_PARSE_MODE = "HTML"
+
 FEE          = {"group": 50000, "knockout": 100000, "final": 200000}
 # Sport key tự động theo mode
 def get_sport_key():
     return TEST_SPORT_KEY if TEST_MODE else "soccer_fifa_world_cup"
-POLL_BEFORE  = 8   # Gửi poll trước kickoff bao nhiêu tiếng
+POLL_BEFORE  = 20  # Gửi poll trước kickoff bao nhiêu tiếng
 TZ           = pytz.timezone(TIMEZONE)
 DATA_FILE    = "data.json"
 logging.basicConfig(level=logging.INFO)
@@ -241,7 +293,7 @@ def parse_asian_handicap(game: dict) -> dict | None:
             "home_team":     game["home_team"],
             "away_team":     game["away_team"],
             "commence_time": game["commence_time"],
-            "match_id":      game["id"][:8].upper(),
+            "game_id":       game["id"],  # UUID gốc để tra cứu
             "bookmaker":     chosen_bm["title"],
             "handicap":      home.get("point", 0),
             "home_odds":     home["price"],
@@ -526,14 +578,23 @@ async def cmd_autosetup(update: Update, context: ContextTypes.DEFAULT_TYPE):
         kickoff = datetime.fromisoformat(p["commence_time"].replace("Z", "+00:00")).astimezone(TZ)
         if kickoff <= now: continue
 
-        match_id = p["match_id"]
-        base_id = match_id
-        counter = 1
-        while match_id in data["matches"] and data["matches"][match_id]["home_team"] != p["home_team"]:
-            match_id = f"{base_id}{counter}"
-            counter += 1
+        # Tạo ID dạng WC001, WC002... theo thứ tự kickoff
+        prefix = "WC" if not TEST_MODE else "TS"
+        existing_nums = []
+        for mid in data["matches"]:
+            if mid.startswith(prefix) and mid[len(prefix):].isdigit():
+                existing_nums.append(int(mid[len(prefix):]))
+        next_num = max(existing_nums, default=0) + 1 + created
+        match_id = f"{prefix}{next_num:03d}"
 
-        if match_id in data["matches"]:
+        # Kiểm tra trùng trận (cùng đội + cùng giờ)
+        duplicate = any(
+            m["home_team"] == p["home_team"] and
+            m["away_team"] == p["away_team"] and
+            m["kickoff"][:10] == kickoff.isoformat()[:10]
+            for m in data["matches"].values()
+        )
+        if duplicate:
             skipped += 1
             continue
 
@@ -1052,22 +1113,79 @@ async def cmd_listsports(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def cmd_testmode(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Xem trạng thái test mode. /testmode"""
+    """Xem trạng thái test mode và số trận theo từng loại. /testmode"""
     if not is_admin(update.effective_user.id): return
-    if TEST_MODE:
-        await update.message.reply_text(
-            "TEST MODE đang BẬT\n"
-            "Bot đang dùng trận GIAO HỮU quốc tế\n"
-            "Phí thua cố định: 50,000đ/trận\n\n"
-            "Để tắt: xóa biến TEST_MODE trong Railway Variables\n"
-            "Để reset về World Cup: /resetforwc"
-        )
+    data = load_data()
+    matches = data.get("matches", {})
+
+    ts_count = len([m for m in matches if m.startswith("TS")])
+    wc_count = len([m for m in matches if m.startswith("WC")])
+    other    = len(matches) - ts_count - wc_count
+
+    mode_status = "BẬT (Giao hữu)" if TEST_MODE else "TẮT (World Cup)"
+    sport_key   = get_sport_key()
+
+    msg = (
+        f"CHẾ ĐỘ HIỆN TẠI: {mode_status}\n"
+        f"Sport key: {sport_key}\n\n"
+        f"TRẬN TRONG HỆ THỐNG:\n"
+        f"• TS... (test): {ts_count} trận\n"
+        f"• WC... (World Cup): {wc_count} trận\n"
+    )
+    if other:
+        msg += f"• Khác: {other} trận\n"
+
+    if ts_count > 0 and not TEST_MODE:
+        msg += "\n⚠️ Còn trận TEST trong khi đang ở chế độ WC!\nGõ /clearmatches TS để xóa"
+    if wc_count > 0 and TEST_MODE:
+        msg += "\n⚠️ Còn trận WC trong khi đang ở chế độ TEST!\nGõ /clearmatches WC để xóa"
+
+    msg += (
+        "\n\nLỆNH CHUYỂN CHẾ ĐỘ:\n"
+        "/clearmatches TS — Xóa trận test\n"
+        "/clearmatches WC — Xóa trận World Cup\n"
+        "/resetforwc confirm — Reset hẳn sang WC\n"
+    )
+    await update.message.reply_text(msg)
+
+
+async def cmd_clearmatches(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Xóa trận theo chế độ hiện tại.
+    /clearmatches       — xóa trận theo prefix hiện tại (TS hoặc WC)
+    /clearmatches all   — xóa tất cả trận
+    /clearmatches TS    — xóa trận test (TS001, TS002...)
+    /clearmatches WC    — xóa trận World Cup (WC001, WC002...)
+    """
+    if not is_admin(update.effective_user.id): return
+
+    arg = context.args[0].upper() if context.args else ("TS" if TEST_MODE else "WC")
+    data = load_data()
+    matches = data.get("matches", {})
+
+    if arg == "ALL":
+        to_delete = list(matches.keys())
     else:
+        to_delete = [mid for mid in matches if mid.startswith(arg)]
+
+    if not to_delete:
         await update.message.reply_text(
-            "TEST MODE đang TẮT\n"
-            "Bot đang dùng lịch WORLD CUP 2026\n\n"
-            "Để bật test: thêm TEST_MODE=true trong Railway Variables"
+            f"Không có trận nào có prefix '{arg}' để xóa."
         )
+        return
+
+    # Xóa bình chọn liên quan
+    for mid in to_delete:
+        data["matches"].pop(mid, None)
+        data["predictions"].pop(mid, None)
+
+    save_data(data)
+    await update.message.reply_text(
+        f"Đã xóa {len(to_delete)} trận: {', '.join(to_delete[:10])}{'...' if len(to_delete) > 10 else ''}\n"
+        f"Bình chọn liên quan cũng đã xóa.\n\n"
+        f"Lưu ý: nợ tiền KHÔNG reset. Dùng /resetforwc để reset cả nợ."
+    )
+
 
 
 async def cmd_resetforwc(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -1467,6 +1585,26 @@ async def cmd_fetchresult(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ============================================================
 
 
+async def cmd_rules(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Gửi thể lệ vào nhóm. /rules"""
+    if not is_admin(update.effective_user.id): return
+    await context.bot.send_message(
+        chat_id=GROUP_ID,
+        text=RULES_TEXT,
+        parse_mode=RULES_PARSE_MODE
+    )
+    await update.message.reply_text("Đã gửi thể lệ vào nhóm!")
+
+
+async def cmd_myrules(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Xem thể lệ cá nhân. /myrules"""
+    await update.message.reply_text(
+        RULES_TEXT,
+        parse_mode=RULES_PARSE_MODE
+    )
+
+
+
 async def cmd_join(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Thành viên tự đăng ký tham gia. Gõ /join trong nhóm."""
     user    = update.effective_user
@@ -1492,6 +1630,16 @@ async def cmd_join(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"Tổng thành viên: {total} người\n\n"
         f"Bạn sẽ bị tính thua nếu không bình chọn trước giờ kickoff."
     )
+    # Gửi thể lệ riêng cho người mới
+    try:
+        await context.bot.send_message(
+            chat_id=user.id,
+            text=RULES_TEXT,
+            parse_mode=RULES_PARSE_MODE
+        )
+    except Exception:
+        # Nếu không nhắn riêng được (chưa từng chat với bot)
+        pass
     # Thông báo cho admin
     try:
         await context.bot.send_message(
@@ -1893,6 +2041,8 @@ def main():
     app.add_handler(CommandHandler("fetchresult",    cmd_fetchresult))
     app.add_handler(CommandHandler("paid",           cmd_paid))
     app.add_handler(CommandHandler("unpaid",         cmd_unpaid))
+    app.add_handler(CommandHandler("rules",          cmd_rules))
+    app.add_handler(CommandHandler("myrules",        cmd_myrules))
     app.add_handler(CommandHandler("join",           cmd_join))
     app.add_handler(CommandHandler("members",        cmd_members))
     app.add_handler(CommandHandler("removemember",   cmd_removemember))
@@ -1903,6 +2053,7 @@ def main():
     app.add_handler(CommandHandler("editpaid",       cmd_editpaid))
     app.add_handler(CommandHandler("viewmatch",      cmd_viewmatch))
     app.add_handler(CommandHandler("listsports",     cmd_listsports))
+    app.add_handler(CommandHandler("clearmatches",   cmd_clearmatches))
     app.add_handler(CommandHandler("testmode",       cmd_testmode))
     app.add_handler(CommandHandler("resetforwc",     cmd_resetforwc))
     app.add_handler(CommandHandler("resetdata",      cmd_resetdata))
