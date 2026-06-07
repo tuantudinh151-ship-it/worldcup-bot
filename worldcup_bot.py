@@ -6,13 +6,30 @@ from telegram.ext import Application, CommandHandler, PollAnswerHandler, Context
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 # ============================================================
-#  CẤU HÌNH - CHỈ SỬA PHẦN NÀY
+#  ĐỌC CẤU HÌNH TỪ FILE .env (không cần sửa file này)
 # ============================================================
-BOT_TOKEN   = "8831647645:AAGPwzT0zUu8eK7KULZXL1pDoRPKbUizgqU"
-GROUP_ID    = -4992891193      # Chat ID nhóm (số âm)
-ADMIN_ID    = 1216368366          # ID cá nhân của bạn
-ODDS_API_KEY = "1c09f1cba53e1b6cc8d53d60f00501d5"
-TIMEZONE    = "Asia/Ho_Chi_Minh"
+def load_env():
+    env = {}
+    if os.path.exists(".env"):
+        with open(".env", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    k, v = line.split("=", 1)
+                    env[k.strip()] = v.strip()
+    return env
+
+_env = load_env()
+BOT_TOKEN    = _env.get("BOT_TOKEN", "")
+GROUP_ID     = int(_env.get("GROUP_ID", "0"))
+ADMIN_ID     = int(_env.get("ADMIN_ID", "0"))
+ODDS_API_KEY = _env.get("ODDS_API_KEY", "")
+TIMEZONE     = "Asia/Ho_Chi_Minh"
+
+if not BOT_TOKEN or not GROUP_ID or not ADMIN_ID:
+    print("LỖI: Chưa có file .env hoặc thiếu thông tin!")
+    print("Hãy chạy setup_config.bat trước.")
+    exit(1)
 # ============================================================
 
 FEE = {"group": 50000, "knockout": 100000, "final": 200000}
