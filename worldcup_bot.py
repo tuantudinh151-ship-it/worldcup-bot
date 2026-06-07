@@ -38,6 +38,12 @@ APIFOOTBALL_KEY = _env.get("APIFOOTBALL_KEY", "")
 GITHUB_TOKEN    = _env.get("GITHUB_TOKEN", "")
 GITHUB_REPO     = _env.get("GITHUB_REPO", "")
 TIMEZONE        = "Asia/Ho_Chi_Minh"
+# TEST MODE: dùng trận giao hữu thay World Cup
+# Đặt TEST_MODE=true trong Railway Variables để bật
+TEST_MODE       = _env.get("TEST_MODE", "false").lower() == "true"
+# Sport key có thể override qua biến môi trường TEST_SPORT_KEY
+# Mặc định thử soccer_friendly_international, nếu không có thì dùng EPL
+TEST_SPORT_KEY  = _env.get("TEST_SPORT_KEY", "soccer_friendly_international")
 
 if not BOT_TOKEN or not GROUP_ID or not ADMIN_ID:
     print("LỖI: Thiếu thông tin cấu hình!")
@@ -47,7 +53,9 @@ if not BOT_TOKEN or not GROUP_ID or not ADMIN_ID:
 # ============================================================
 
 FEE          = {"group": 50000, "knockout": 100000, "final": 200000}
-SPORT_KEY    = "soccer_fifa_world_cup"
+# Sport key tự động theo mode
+def get_sport_key():
+    return TEST_SPORT_KEY if TEST_MODE else "soccer_fifa_world_cup"
 POLL_BEFORE  = 8   # Gửi poll trước kickoff bao nhiêu tiếng
 TZ           = pytz.timezone(TIMEZONE)
 DATA_FILE    = "data.json"
@@ -60,15 +68,15 @@ logger = logging.getLogger(__name__)
 def get_round_type(commence_time: datetime) -> str:
     """
     World Cup 2026: 12/06 - 20/07
-    Vòng bảng:         12/06 - 27/06 (48 trận)
-    Vòng loại trực tiếp: 29/06 - 19/07
-    Chung kết:         20/07
+    Test mode: tất cả trận giao hữu tính là vòng bảng (50k)
     """
+    if TEST_MODE:
+        return "group"  # Test mode: phí cố định 50k
     from datetime import date
     d = commence_time.astimezone(TZ).date()
-    if d <= date(2026, 6, 27): return "group"     # Vòng bảng
-    if d <= date(2026, 7, 19): return "knockout"  # Vòng loại trực tiếp
-    return "final"                                 # Chung kết 20/07
+    if d <= date(2026, 6, 27): return "group"
+    if d <= date(2026, 7, 19): return "knockout"
+    return "final"
 
 # ============================================================
 #  DATA
@@ -157,14 +165,48 @@ def save_data(data):
 # ============================================================
 #  LẤY KÈO TỪ THE ODDS API
 # ============================================================
-def fetch_odds(market="spreads"):
+def fetch_available_sports():
+    """Lấy danh sách sport keys có sẵn từ API."""
     try:
         r = requests.get(
-            f"https://api.the-odds-api.com/v4/sports/{SPORT_KEY}/odds",
+            "https://api.the-odds-api.com/v4/sports",
+            params={"apiKey": ODDS_API_KEY},
+            timeout=10
+        )
+        if r.status_code == 200:
+            return [s["key"] for s in r.json() if s.get("active")]
+        return []
+    except:
+        return []
+
+def fetch_odds(market="spreads"):
+    sport_key = get_sport_key()
+    try:
+        r = requests.get(
+            f"https://api.the-odds-api.com/v4/sports/{sport_key}/odds",
             params={"apiKey": ODDS_API_KEY, "regions": "eu",
                     "markets": market, "oddsFormat": "decimal", "dateFormat": "iso"},
             timeout=15
         )
+        if r.status_code == 404 and TEST_MODE:
+            # Sport key không tồn tại → thử tìm key giao hữu khác
+            logger.warning(f"Sport key '{sport_key}' không có, tìm key thay thế...")
+            available = fetch_available_sports()
+            fallbacks = [k for k in available if "friendly" in k or "international" in k]
+            if not fallbacks:
+                # Không có giao hữu, thử giải đang có trận
+                fallbacks = [k for k in available if "soccer" in k]
+            if fallbacks:
+                logger.info(f"Dùng sport key thay thế: {fallbacks[0]}")
+                r = requests.get(
+                    f"https://api.the-odds-api.com/v4/sports/{fallbacks[0]}/odds",
+                    params={"apiKey": ODDS_API_KEY, "regions": "eu",
+                            "markets": market, "oddsFormat": "decimal", "dateFormat": "iso"},
+                    timeout=15
+                )
+            else:
+                logger.error("Không tìm được sport key thay thế")
+                return []
         if r.status_code != 200:
             logger.error(f"Odds API lỗi: {r.status_code} {r.text}")
             return []
@@ -748,6 +790,338 @@ async def handle_poll_answer(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
 
 
+async def cmd_editresult(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Sửa kết quả trận đã có, tính lại nợ chính xác.
+    /editresult <match_id> <home|draw|away>
+    Bot sẽ hoàn lại nợ cũ rồi tính lại từ đầu.
+    """
+    if not is_admin(update.effective_user.id): return
+    if len(context.args) < 2:
+        await update.message.reply_text(
+            "Cú pháp: /editresult <match_id> <home|draw|away>\n"
+            "Ví dụ: /editresult TEST01 home\n\n"
+            "Bot sẽ hoàn lại nợ cũ và tính lại từ đầu."
+        )
+        return
+
+    match_id   = context.args[0].upper()
+    new_result = context.args[1].lower()
+    if new_result not in ["home", "draw", "away"]:
+        await update.message.reply_text("Kết quả phải là: home / draw / away")
+        return
+
+    data = load_data()
+    if match_id not in data["matches"]:
+        await update.message.reply_text(f"Không tìm thấy trận {match_id}.")
+        return
+
+    m          = data["matches"][match_id]
+    old_result = m.get("result")
+    fee        = FEE.get(m["round"], 50000)
+    members    = data.get("members", {})
+    preds      = data["predictions"].get(match_id, {})
+
+    # Bước 1: Hoàn lại nợ cũ
+    if old_result:
+        for uid, member in members.items():
+            player = data["players"].get(uid)
+            if not player:
+                continue
+            if uid in preds:
+                if preds[uid]["choice"] != old_result:
+                    # Người này đã bị tính thua cũ → hoàn lại
+                    player["debt"] = max(0, player.get("debt", 0) - fee)
+            else:
+                # Không bình chọn → đã bị tính thua cũ → hoàn lại
+                player["debt"] = max(0, player.get("debt", 0) - fee)
+
+    # Bước 2: Tính lại với kết quả mới
+    winners, losers, no_vote = [], [], []
+    for uid, member in members.items():
+        player = data["players"].setdefault(uid, {"name": member["name"], "debt": 0})
+        player["name"] = member["name"]
+        if uid in preds:
+            choice = preds[uid]["choice"]
+            if choice == new_result:
+                winners.append(member["name"])
+            else:
+                losers.append(member["name"])
+                player["debt"] = player.get("debt", 0) + fee
+        else:
+            no_vote.append(member["name"])
+            player["debt"] = player.get("debt", 0) + fee
+
+    data["matches"][match_id]["result"] = new_result
+    save_data(data)
+
+    result_label = {"home": m["home_team"], "draw": "Hòa kèo", "away": m["away_team"]}[new_result]
+    hcap_txt     = format_handicap(m["handicap"], m["home_team"], m["away_team"])
+    msg = (
+        f"SỬA KẾT QUẢ TRẬN {match_id}\n"
+        f"{m['home_team']} vs {m['away_team']}\n"
+        f"Kèo: {hcap_txt}\n"
+        f"Kết quả cũ: {old_result or 'chưa có'} → Mới: {result_label}\n\n"
+    )
+    if winners:  msg += f"THẮNG ({len(winners)}): {', '.join(winners)}\n"
+    if losers:   msg += f"THUA -{fee:,}đ ({len(losers)}): {', '.join(losers)}\n"
+    if no_vote:  msg += f"KHÔNG BQ -{fee:,}đ ({len(no_vote)}): {', '.join(no_vote)}\n"
+
+    await context.bot.send_message(chat_id=GROUP_ID, text=msg)
+    await update.message.reply_text("Đã sửa kết quả và tính lại nợ.")
+
+
+async def cmd_editdebt(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Sửa nợ thủ công cho 1 thành viên.
+    /editdebt <tên hoặc ID> <số_tiền_mới>
+    Ví dụ: /editdebt Văn A 150000   (đặt nợ = 150k)
+            /editdebt Văn A 0        (xóa nợ)
+    """
+    if not is_admin(update.effective_user.id): return
+    if len(context.args) < 2:
+        await update.message.reply_text(
+            "Cú pháp: /editdebt <tên hoặc ID> <số_tiền_nợ_mới>\n"
+            "Ví dụ: /editdebt Văn A 150000\n"
+            "        /editdebt 123456789 0"
+        )
+        return
+
+    amount_str = context.args[-1].replace(".", "").replace(",", "")
+    if not amount_str.isdigit():
+        await update.message.reply_text("Số tiền phải là số nguyên.")
+        return
+
+    amount = int(amount_str)
+    query  = " ".join(context.args[:-1]).strip()
+    data   = load_data()
+    members = data.get("members", {})
+
+    # Tìm thành viên
+    found_uid = found_name = None
+    if query in members:
+        found_uid  = query
+        found_name = members[query]["name"]
+    else:
+        matches_found = [(uid, m["name"]) for uid, m in members.items()
+                         if query.lower() in m["name"].lower()]
+        if len(matches_found) == 1:
+            found_uid, found_name = matches_found[0]
+        elif len(matches_found) > 1:
+            names = "\n".join([f"• {n} (ID: {u})" for u, n in matches_found])
+            await update.message.reply_text(f"Tìm thấy nhiều người:\n{names}\nDùng ID để chính xác hơn.")
+            return
+        else:
+            await update.message.reply_text(f"Không tìm thấy '{query}'.")
+            return
+
+    old_debt = data["players"].get(found_uid, {}).get("debt", 0)
+    data["players"].setdefault(found_uid, {"name": found_name, "debt": 0})["debt"] = amount
+    save_data(data)
+
+    await update.message.reply_text(
+        f"Đã sửa nợ của {found_name}:\n"
+        f"Cũ: {old_debt:,}đ → Mới: {amount:,}đ"
+    )
+
+
+async def cmd_editpaid(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Sửa số tiền đã đóng của thành viên.
+    /editpaid <tên hoặc ID> <số_tiền_đã_đóng_mới>
+    """
+    if not is_admin(update.effective_user.id): return
+    if len(context.args) < 2:
+        await update.message.reply_text(
+            "Cú pháp: /editpaid <tên hoặc ID> <số_tiền_đã_đóng>\n"
+            "Ví dụ: /editpaid Văn A 100000"
+        )
+        return
+
+    amount_str = context.args[-1].replace(".", "").replace(",", "")
+    if not amount_str.isdigit():
+        await update.message.reply_text("Số tiền phải là số nguyên.")
+        return
+
+    amount  = int(amount_str)
+    query   = " ".join(context.args[:-1]).strip()
+    data    = load_data()
+    members = data.get("members", {})
+
+    found_uid = found_name = None
+    if query in members:
+        found_uid  = query
+        found_name = members[query]["name"]
+    else:
+        matches_found = [(uid, m["name"]) for uid, m in members.items()
+                         if query.lower() in m["name"].lower()]
+        if len(matches_found) == 1:
+            found_uid, found_name = matches_found[0]
+        elif len(matches_found) > 1:
+            names = "\n".join([f"• {n} (ID: {u})" for u, n in matches_found])
+            await update.message.reply_text(f"Tìm thấy nhiều người:\n{names}")
+            return
+        else:
+            await update.message.reply_text(f"Không tìm thấy '{query}'.")
+            return
+
+    old_paid = members[found_uid].get("paid", 0)
+    data["members"][found_uid]["paid"] = amount
+    save_data(data)
+
+    debt   = data["players"].get(found_uid, {}).get("debt", 0)
+    remain = max(0, debt - amount)
+    await update.message.reply_text(
+        f"Đã sửa số tiền đã đóng của {found_name}:\n"
+        f"Cũ: {old_paid:,}đ → Mới: {amount:,}đ\n"
+        f"Tổng nợ: {debt:,}đ | Còn lại: {remain:,}đ"
+    )
+
+
+async def cmd_viewmatch(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Xem chi tiết 1 trận: ai bình chọn gì, kết quả, nợ.
+    /viewmatch <match_id>
+    """
+    if not is_admin(update.effective_user.id): return
+    if not context.args:
+        await update.message.reply_text("Cú pháp: /viewmatch <match_id>")
+        return
+
+    match_id = context.args[0].upper()
+    data     = load_data()
+    if match_id not in data["matches"]:
+        await update.message.reply_text(f"Không tìm thấy trận {match_id}.")
+        return
+
+    m       = data["matches"][match_id]
+    preds   = data["predictions"].get(match_id, {})
+    members = data.get("members", {})
+    kickoff = datetime.fromisoformat(m["kickoff"])
+    hcap    = format_handicap(m["handicap"], m["home_team"], m["away_team"])
+    result  = m.get("result", "Chưa có")
+    score   = f"{m.get('home_score','?')}-{m.get('away_score','?')}" if m.get("result") else "Chưa đấu"
+
+    msg = (
+        f"CHI TIẾT TRẬN {match_id}\n"
+        f"{m['home_team']} vs {m['away_team']}\n"
+        f"Kickoff: {kickoff.strftime('%d/%m/%Y %H:%M')}\n"
+        f"Kèo: {hcap}\n"
+        f"Tỷ số: {score} | Kết quả kèo: {result}\n"
+        f"Vòng: {m['round']} | Phí: {FEE.get(m['round'],50000):,}đ\n"
+        f"Poll: {'Đã khóa' if m['locked'] else 'Đang mở'}\n\n"
+        f"BÌNH CHỌN ({len(preds)} người):\n"
+    )
+
+    choice_label = {"home": "TRÊN", "draw": "HÒA", "away": "DƯỚI"}
+    for uid, pred in preds.items():
+        name   = pred["name"]
+        choice = choice_label.get(pred["choice"], pred["choice"])
+        if m.get("result"):
+            outcome = "✓" if pred["choice"] == m["result"] else "✗"
+        else:
+            outcome = ""
+        msg += f"  {outcome} {name}: {choice}\n"
+
+    no_vote = [m2["name"] for uid, m2 in members.items() if uid not in preds]
+    if no_vote:
+        msg += f"\nKHÔNG BQ: {', '.join(no_vote)}"
+
+    await update.message.reply_text(msg)
+
+
+
+async def cmd_listsports(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Xem danh sách sport keys có sẵn để dùng test. /listsports"""
+    if not is_admin(update.effective_user.id): return
+    await update.message.reply_text("Đang lấy danh sách từ API...")
+    sports = fetch_available_sports()
+    soccer = [s for s in sports if "soccer" in s]
+    if not soccer:
+        await update.message.reply_text("Không lấy được danh sách. Kiểm tra ODDS_API_KEY.")
+        return
+    msg = "DANH SÁCH SPORT KEYS (Soccer):\n" + "="*30 + "\n"
+    for s in soccer:
+        msg += f"• {s}\n"
+    msg += (
+        "\nCách dùng: vào Railway Variables, thêm:\n"
+        "TEST_SPORT_KEY = <sport_key_muốn_dùng>\n\n"
+        "Tìm key có 'friendly' để test với trận giao hữu."
+    )
+    await update.message.reply_text(msg)
+
+
+async def cmd_testmode(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Xem trạng thái test mode. /testmode"""
+    if not is_admin(update.effective_user.id): return
+    if TEST_MODE:
+        await update.message.reply_text(
+            "TEST MODE đang BẬT\n"
+            "Bot đang dùng trận GIAO HỮU quốc tế\n"
+            "Phí thua cố định: 50,000đ/trận\n\n"
+            "Để tắt: xóa biến TEST_MODE trong Railway Variables\n"
+            "Để reset về World Cup: /resetforwc"
+        )
+    else:
+        await update.message.reply_text(
+            "TEST MODE đang TẮT\n"
+            "Bot đang dùng lịch WORLD CUP 2026\n\n"
+            "Để bật test: thêm TEST_MODE=true trong Railway Variables"
+        )
+
+
+async def cmd_resetforwc(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Xóa toàn bộ dữ liệu test, chuẩn bị cho World Cup thật.
+    /resetforwc confirm
+    """
+    if not is_admin(update.effective_user.id): return
+    if not context.args or context.args[0] != "confirm":
+        await update.message.reply_text(
+            "Lệnh này sẽ:\n"
+            "1. Xóa toàn bộ trận test (giao hữu)\n"
+            "2. Xóa toàn bộ bình chọn test\n"
+            "3. Reset nợ về 0 cho tất cả thành viên\n"
+            "4. GIỮ LẠI danh sách thành viên\n\n"
+            "Nếu chắc chắn, gõ:\n/resetforwc confirm"
+        )
+        return
+
+    data = load_data()
+
+    # Giữ lại members, reset debt và paid về 0
+    members = data.get("members", {})
+    players = {}
+    for uid, m in members.items():
+        players[uid] = {"name": m["name"], "debt": 0}
+        members[uid]["paid"] = 0
+
+    # Xóa trận và bình chọn
+    new_data = {
+        "matches":     {},
+        "predictions": {},
+        "players":     players,
+        "members":     members,
+    }
+    save_data(new_data)
+
+    total = len(members)
+    await update.message.reply_text(
+        f"Đã reset xong! Sẵn sàng cho World Cup 2026\n\n"
+        f"Giữ lại: {total} thành viên (nợ reset về 0)\n"
+        f"Đã xóa: tất cả trận giao hữu + bình chọn\n\n"
+        f"Bước tiếp theo:\n"
+        f"1. Tắt TEST_MODE trong Railway Variables\n"
+        f"2. Gõ /autosetup để lấy lịch World Cup"
+    )
+    await context.bot.send_message(
+        chat_id=GROUP_ID,
+        text="THÔNG BÁO: Hệ thống đã reset, sẵn sàng cho World Cup 2026!\n"
+             "Các thành viên không cần /join lại.\nChờ lịch thi đấu chính thức nhé!"
+    )
+
+
+
 async def cmd_resetdata(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     Xóa toàn bộ dữ liệu test, bắt đầu lại từ đầu.
@@ -816,6 +1190,20 @@ async def post_init(application):
                 args=[match_id, application], id=f"lock_{match_id}", replace_existing=True)
             restored += 1
 
+        # Khôi phục lịch lấy kết quả tự động
+        if not m.get("result") and kickoff < now:
+            result_time = kickoff + timedelta(hours=2, minutes=30)
+            if result_time > now:
+                scheduler.add_job(auto_fetch_result_job, "date", run_date=result_time,
+                    args=[match_id, application], id=f"result_{match_id}", replace_existing=True)
+                restored += 1
+            elif (now - kickoff).total_seconds() < 6 * 3600:
+                # Kickoff đã qua nhưng chưa quá 6 tiếng → thử lấy kết quả ngay
+                scheduler.add_job(auto_fetch_result_job, "date",
+                    run_date=now + timedelta(minutes=1),
+                    args=[match_id, application], id=f"result_now_{match_id}", replace_existing=True)
+                restored += 1
+
     logger.info(f"Bot đã khởi động! Khôi phục {restored} lịch.")
 
 
@@ -867,22 +1255,126 @@ def fetch_match_result_api(home_team: str, away_team: str, match_date: str) -> d
 def determine_keo_result(home_score: int, away_score: int, handicap: float) -> str:
     """
     Tính kết quả kèo châu Á từ tỷ số thực tế.
-    handicap < 0: đội nhà chấp |handicap| trái
-    handicap > 0: đội khách chấp handicap trái
-    handicap == 0: kèo chẵn, có thể hòa
-    Trả về: 'home' | 'draw' | 'away'
-    """
-    h = normalize_handicap(handicap)
-    # Tính tỷ số sau khi áp kèo
-    # handicap âm = đội nhà chấp: home_score + handicap (vd: -0.5 → home cần thắng)
-    adjusted_home = home_score + h  # h âm = nhà chấp, dương = khách chấp
 
-    if adjusted_home > away_score:
-        return "home"
-    elif adjusted_home < away_score:
-        return "away"
-    else:
-        return "draw"  # chỉ xảy ra với kèo nguyên
+    Quy ước handicap (theo nhà cái):
+      handicap < 0: đội nhà chấp |handicap| trái cho đội khách
+        VD: -0.5 → nhà chấp 0.5, nhà phải thắng mới thắng kèo
+        VD: -1.0 → nhà chấp 1, nhà phải thắng 2+ mới thắng kèo
+      handicap > 0: đội khách chấp handicap trái cho đội nhà
+        VD: +0.5 → khách chấp 0.5, khách phải thắng mới thắng kèo
+        VD: +1.0 → khách chấp 1, khách phải thắng 2+ mới thắng kèo
+      handicap == 0: kèo chẵn
+
+    Cách tính: lấy hiệu tỷ số (home - away) so với mức chấp
+      diff = home_score - away_score
+      Nếu handicap < 0 (nhà chấp):  diff > |handicap| → nhà thắng kèo
+      Nếu handicap > 0 (khách chấp): diff < -handicap → khách thắng kèo
+    """
+    h    = normalize_handicap(handicap)
+    diff = home_score - away_score  # dương: nhà dẫn, âm: khách dẫn
+
+    # Áp kèo: điều chỉnh diff theo handicap
+    # h âm (nhà chấp): nhà bị trừ → adjusted = diff + h (h âm → làm khó nhà)
+    # h dương (khách chấp): nhà được cộng → adjusted = diff + h
+    adjusted = diff + h
+
+    if adjusted > 0:   return "home"
+    elif adjusted < 0: return "away"
+    else:              return "draw"  # chỉ xảy ra với kèo nguyên
+
+
+
+async def auto_fetch_result_job(match_id: str, app):
+    """
+    Tự động lấy kết quả 1 trận cụ thể sau khi kết thúc.
+    Nếu chưa có kết quả thì thử lại sau 30 phút (tối đa 3 lần).
+    """
+    data = load_data()
+    if match_id not in data["matches"]:
+        return
+    m = data["matches"][match_id]
+    if m.get("result"):
+        return  # Đã có kết quả rồi
+
+    if not APIFOOTBALL_KEY:
+        logger.warning(f"Không có APIFOOTBALL_KEY, bỏ qua auto fetch trận {match_id}")
+        return
+
+    kickoff    = datetime.fromisoformat(m["kickoff"])
+    match_date = kickoff.strftime("%Y-%m-%d")
+    score      = fetch_match_result_api(m["home_team"], m["away_team"], match_date)
+
+    if not score:
+        # Thử lại sau 30 phút nếu chưa có kết quả
+        retry_count = m.get("result_retry", 0)
+        if retry_count < 3:
+            data["matches"][match_id]["result_retry"] = retry_count + 1
+            save_data(data)
+            scheduler = app.bot_data.get("scheduler")
+            if scheduler:
+                retry_time = datetime.now(TZ) + timedelta(minutes=30)
+                scheduler.add_job(auto_fetch_result_job, "date",
+                    run_date=retry_time,
+                    args=[match_id, app],
+                    id=f"result_retry_{match_id}_{retry_count}",
+                    replace_existing=True)
+            logger.info(f"Chưa có kết quả trận {match_id}, thử lại sau 30 phút (lần {retry_count+1}/3)")
+        else:
+            logger.warning(f"Không tìm được kết quả trận {match_id} sau 3 lần thử")
+            await app.bot.send_message(
+                chat_id=ADMIN_ID,
+                text=f"Không tự động lấy được kết quả trận {match_id}\n"
+                     f"{m['home_team']} vs {m['away_team']}\n"
+                     f"Hãy nhập thủ công bằng /result {match_id} <home|draw|away>"
+            )
+        return
+
+    # Có kết quả — tính thắng thua
+    keo_result = determine_keo_result(score["home_score"], score["away_score"], m["handicap"])
+    data = load_data()  # load lại đề phòng có thay đổi
+    data["matches"][match_id]["result"]     = keo_result
+    data["matches"][match_id]["home_score"] = score["home_score"]
+    data["matches"][match_id]["away_score"] = score["away_score"]
+
+    fee     = FEE.get(m["round"], 50000)
+    members = data.get("members", {})
+    preds   = data["predictions"].get(match_id, {})
+    winners, losers, no_vote = [], [], []
+
+    for uid, member in members.items():
+        player = data["players"].setdefault(uid, {"name": member["name"], "debt": 0})
+        player["name"] = member["name"]
+        if uid in preds:
+            choice = preds[uid]["choice"]
+            if choice == keo_result:
+                winners.append(member["name"])
+            else:
+                losers.append(member["name"])
+                player["debt"] = player.get("debt", 0) + fee
+        else:
+            # Không bình chọn = thua
+            no_vote.append(member["name"])
+            player["debt"] = player.get("debt", 0) + fee
+
+    save_data(data)
+
+    # Thông báo vào nhóm
+    hcap_txt     = format_handicap(m["handicap"], m["home_team"], m["away_team"])
+    result_label = {"home": m["home_team"], "draw": "Hòa kèo", "away": m["away_team"]}[keo_result]
+    msg = (
+        f"KẾT QUẢ TỰ ĐỘNG - Trận {match_id}\n"
+        f"{m['home_team']} {score['home_score']} - {score['away_score']} {m['away_team']}\n"
+        f"Kèo: {hcap_txt} → {result_label} thắng kèo\n\n"
+    )
+    if winners:  msg += f"THẮNG ({len(winners)}): {', '.join(winners)}\n"
+    if losers:   msg += f"THUA -{fee:,}đ ({len(losers)}): {', '.join(losers)}\n"
+    if no_vote:  msg += f"KHÔNG BQ -{fee:,}đ ({len(no_vote)}): {', '.join(no_vote)}\n"
+
+    try:
+        await app.bot.send_message(chat_id=GROUP_ID, text=msg)
+        logger.info(f"Đã tự động cập nhật kết quả trận {match_id}: {keo_result}")
+    except Exception as e:
+        logger.error(f"Lỗi gửi kết quả tự động {match_id}: {e}")
 
 
 async def cmd_fetchresult(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -1406,6 +1898,13 @@ def main():
     app.add_handler(CommandHandler("removemember",   cmd_removemember))
     app.add_handler(CommandHandler("addmember",      cmd_addmember))
     app.add_handler(CommandHandler("excel",          cmd_excel))
+    app.add_handler(CommandHandler("editresult",     cmd_editresult))
+    app.add_handler(CommandHandler("editdebt",       cmd_editdebt))
+    app.add_handler(CommandHandler("editpaid",       cmd_editpaid))
+    app.add_handler(CommandHandler("viewmatch",      cmd_viewmatch))
+    app.add_handler(CommandHandler("listsports",     cmd_listsports))
+    app.add_handler(CommandHandler("testmode",       cmd_testmode))
+    app.add_handler(CommandHandler("resetforwc",     cmd_resetforwc))
     app.add_handler(CommandHandler("resetdata",      cmd_resetdata))
     app.add_handler(CommandHandler("syncdata",        cmd_syncdata))
     app.add_handler(CommandHandler("standings",      cmd_standings))
