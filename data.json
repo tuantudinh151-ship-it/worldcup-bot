@@ -149,6 +149,21 @@
       "poll_id": null,
       "poll_message_id": null,
       "locked": false
+    },
+    "TS053": {
+      "home_team": "Peru",
+      "away_team": "Tay Ban Nha",
+      "kickoff": "2026-06-09T09:00:00+07:00",
+      "round": "group",
+      "handicap": 0.5,
+      "home_odds": 15.0,
+      "away_odds": 1.17,
+      "bookmaker": "Thu cong",
+      "has_draw_option": false,
+      "result": null,
+      "poll_id": null,
+      "poll_message_id": null,
+      "locked": false
     }
   },
   "predictions": {
