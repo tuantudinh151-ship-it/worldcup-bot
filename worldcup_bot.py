@@ -23,7 +23,7 @@ def load_env():
                     k, v = line.split("=", 1)
                     env[k.strip()] = v.strip()
     # Biến môi trường hệ thống (Railway, Render...) ghi đè lên .env
-    for key in ["BOT_TOKEN", "GROUP_ID", "ADMIN_ID", "ODDS_API_KEY", "APIFOOTBALL_KEY", "GITHUB_TOKEN", "GITHUB_REPO"]:
+    for key in ["BOT_TOKEN", "GROUP_ID", "ADMIN_ID", "ODDS_API_KEY", "APIFOOTBALL_KEY", "GITHUB_TOKEN", "GITHUB_REPO", "TEST_MODE", "TEST_SPORT_KEY", "MISE_PYTHON_GITHUB_ATTESTATIONS"]:
         val = os.environ.get(key)
         if val:
             env[key] = val
