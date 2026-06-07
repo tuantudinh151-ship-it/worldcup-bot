@@ -179,6 +179,21 @@
       "poll_id": null,
       "poll_message_id": null,
       "locked": false
+    },
+    "TS036": {
+      "home_team": "Argentina",
+      "away_team": "Iceland",
+      "kickoff": "2026-06-09T08:00:00+07:00",
+      "round": "group",
+      "handicap": -1.0,
+      "home_odds": 1.18,
+      "away_odds": 12.0,
+      "bookmaker": "Thu cong",
+      "has_draw_option": true,
+      "result": null,
+      "poll_id": null,
+      "poll_message_id": null,
+      "locked": false
     }
   },
   "predictions": {
