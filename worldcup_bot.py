@@ -23,7 +23,7 @@ def load_env():
                     k, v = line.split("=", 1)
                     env[k.strip()] = v.strip()
     # Biến môi trường hệ thống (Railway, Render...) ghi đè lên .env
-    for key in ["BOT_TOKEN", "GROUP_ID", "ADMIN_ID", "ODDS_API_KEY", "APIFOOTBALL_KEY"]:
+    for key in ["BOT_TOKEN", "GROUP_ID", "ADMIN_ID", "ODDS_API_KEY", "APIFOOTBALL_KEY", "GITHUB_TOKEN", "GITHUB_REPO"]:
         val = os.environ.get(key)
         if val:
             env[key] = val
@@ -35,6 +35,8 @@ GROUP_ID        = int(_env.get("GROUP_ID", "0"))
 ADMIN_ID        = int(_env.get("ADMIN_ID", "0"))
 ODDS_API_KEY    = _env.get("ODDS_API_KEY", "")
 APIFOOTBALL_KEY = _env.get("APIFOOTBALL_KEY", "")
+GITHUB_TOKEN    = _env.get("GITHUB_TOKEN", "")
+GITHUB_REPO     = _env.get("GITHUB_REPO", "")
 TIMEZONE        = "Asia/Ho_Chi_Minh"
 
 if not BOT_TOKEN or not GROUP_ID or not ADMIN_ID:
@@ -77,11 +79,80 @@ def load_data():
             return json.load(f)
     return {"matches": {}, "predictions": {}, "players": {}}
 
-def save_data(data):
-    with open(DATA_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+
 
 def is_admin(uid): return uid == ADMIN_ID
+
+# ============================================================
+#  SYNC DATA LÊN GITHUB
+# ============================================================
+
+def push_data_to_github():
+    """Push data.json lên GitHub để backup, khôi phục khi Railway restart."""
+    if not GITHUB_TOKEN or not GITHUB_REPO:
+        return
+    try:
+        import base64
+        api = f"https://api.github.com/repos/{GITHUB_REPO}/contents/data.json"
+        headers = {
+            "Authorization": f"token {GITHUB_TOKEN}",
+            "Accept": "application/vnd.github.v3+json"
+        }
+        # Đọc file hiện tại
+        with open(DATA_FILE, "rb") as f:
+            content_b64 = base64.b64encode(f.read()).decode()
+
+        # Lấy SHA của file hiện tại trên GitHub (cần để update)
+        r = requests.get(api, headers=headers, timeout=10)
+        sha = r.json().get("sha") if r.status_code == 200 else None
+
+        payload = {
+            "message": f"auto: update data {datetime.now(TZ).strftime('%d/%m/%Y %H:%M')}",
+            "content": content_b64
+        }
+        if sha:
+            payload["sha"] = sha
+
+        r = requests.put(api, headers=headers, json=payload, timeout=10)
+        if r.status_code in [200, 201]:
+            logger.info("Đã sync data.json lên GitHub")
+        else:
+            logger.error(f"Lỗi push GitHub: {r.status_code} {r.text[:100]}")
+    except Exception as e:
+        logger.error(f"push_data_to_github lỗi: {e}")
+
+
+def pull_data_from_github():
+    """Tải data.json từ GitHub về khi khởi động (khôi phục sau Railway restart)."""
+    if not GITHUB_TOKEN or not GITHUB_REPO:
+        return
+    try:
+        import base64
+        api = f"https://api.github.com/repos/{GITHUB_REPO}/contents/data.json"
+        headers = {
+            "Authorization": f"token {GITHUB_TOKEN}",
+            "Accept": "application/vnd.github.v3+json"
+        }
+        r = requests.get(api, headers=headers, timeout=10)
+        if r.status_code == 200:
+            content_b64 = r.json().get("content", "")
+            data_bytes = base64.b64decode(content_b64)
+            with open(DATA_FILE, "wb") as f:
+                f.write(data_bytes)
+            logger.info("Đã khôi phục data.json từ GitHub")
+        elif r.status_code == 404:
+            logger.info("Chưa có data.json trên GitHub - bắt đầu mới")
+        else:
+            logger.error(f"Lỗi pull GitHub: {r.status_code}")
+    except Exception as e:
+        logger.error(f"pull_data_from_github lỗi: {e}")
+
+
+def save_data(data):
+    """Lưu data vào file và sync lên GitHub."""
+    with open(DATA_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    push_data_to_github()
 
 # ============================================================
 #  LẤY KÈO TỪ THE ODDS API
@@ -676,11 +747,50 @@ async def handle_poll_answer(update: Update, context: ContextTypes.DEFAULT_TYPE)
     logger.info(f"{user.full_name} bình chọn '{choice}' cho trận {match_id}")
 
 
+
+async def cmd_resetdata(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Xóa toàn bộ dữ liệu test, bắt đầu lại từ đầu.
+    /resetdata confirm
+    """
+    if not is_admin(update.effective_user.id): return
+    if not context.args or context.args[0] != "confirm":
+        await update.message.reply_text(
+            "CẢNH BÁO: Lệnh này xóa TOÀN BỘ dữ liệu!\n"
+            "Bao gồm: thành viên, trận đấu, bình chọn, nợ tiền.\n\n"
+            "Nếu chắc chắn, gõ:\n/resetdata confirm"
+        )
+        return
+    # Xóa sạch
+    empty = {"matches": {}, "predictions": {}, "players": {}, "members": {}}
+    save_data(empty)
+    await update.message.reply_text(
+        "Đã xóa toàn bộ dữ liệu!\n"
+        "Bot sẵn sàng cho World Cup 2026.\n\n"
+        "Bắt đầu bằng:\n"
+        "1. /autosetup — lấy lịch thi đấu\n"
+        "2. Nhờ thành viên gõ /join trong nhóm"
+    )
+
+
+async def cmd_syncdata(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Sync data lên GitHub thủ công. /syncdata"""
+    if not is_admin(update.effective_user.id): return
+    if not GITHUB_TOKEN:
+        await update.message.reply_text("Chưa có GITHUB_TOKEN trong Variables.")
+        return
+    push_data_to_github()
+    await update.message.reply_text("Đã sync data.json lên GitHub!")
+
+
 # ============================================================
 #  KHỞI ĐỘNG
 # ============================================================
 
 async def post_init(application):
+    # Khôi phục data từ GitHub trước khi làm gì
+    pull_data_from_github()
+
     scheduler = AsyncIOScheduler(timezone=TZ)
     scheduler.start()
     application.bot_data["scheduler"] = scheduler
@@ -1296,6 +1406,8 @@ def main():
     app.add_handler(CommandHandler("removemember",   cmd_removemember))
     app.add_handler(CommandHandler("addmember",      cmd_addmember))
     app.add_handler(CommandHandler("excel",          cmd_excel))
+    app.add_handler(CommandHandler("resetdata",      cmd_resetdata))
+    app.add_handler(CommandHandler("syncdata",        cmd_syncdata))
     app.add_handler(CommandHandler("standings",      cmd_standings))
     app.add_handler(CommandHandler("matches",        cmd_matches))
     app.add_handler(CommandHandler("mypredictions",  cmd_mypredictions))
