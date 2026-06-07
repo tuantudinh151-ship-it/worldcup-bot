@@ -164,6 +164,21 @@
       "poll_id": null,
       "poll_message_id": null,
       "locked": false
+    },
+    "TS073": {
+      "home_team": "A Rap Saudi",
+      "away_team": "Senegal",
+      "kickoff": "2026-06-09T06:00:00+07:00",
+      "round": "group",
+      "handicap": 0.5,
+      "home_odds": 4.33,
+      "away_odds": 1.62,
+      "bookmaker": "Thu cong",
+      "has_draw_option": false,
+      "result": null,
+      "poll_id": null,
+      "poll_message_id": null,
+      "locked": false
     }
   },
   "predictions": {
