@@ -12,7 +12,9 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 #  ĐỌC CẤU HÌNH TỪ FILE .env (không cần sửa file này)
 # ============================================================
 def load_env():
+    """Đọc config từ file .env (local) hoặc biến môi trường (Railway/server)"""
     env = {}
+    # Đọc file .env nếu có (chạy local)
     if os.path.exists(".env"):
         with open(".env", encoding="utf-8") as f:
             for line in f:
@@ -20,19 +22,25 @@ def load_env():
                 if line and not line.startswith("#") and "=" in line:
                     k, v = line.split("=", 1)
                     env[k.strip()] = v.strip()
+    # Biến môi trường hệ thống (Railway, Render...) ghi đè lên .env
+    for key in ["BOT_TOKEN", "GROUP_ID", "ADMIN_ID", "ODDS_API_KEY", "APIFOOTBALL_KEY"]:
+        val = os.environ.get(key)
+        if val:
+            env[key] = val
     return env
 
 _env = load_env()
-BOT_TOKEN    = _env.get("BOT_TOKEN", "")
-GROUP_ID     = int(_env.get("GROUP_ID", "0"))
-ADMIN_ID     = int(_env.get("ADMIN_ID", "0"))
+BOT_TOKEN       = _env.get("BOT_TOKEN", "")
+GROUP_ID        = int(_env.get("GROUP_ID", "0"))
+ADMIN_ID        = int(_env.get("ADMIN_ID", "0"))
 ODDS_API_KEY    = _env.get("ODDS_API_KEY", "")
 APIFOOTBALL_KEY = _env.get("APIFOOTBALL_KEY", "")
 TIMEZONE        = "Asia/Ho_Chi_Minh"
 
 if not BOT_TOKEN or not GROUP_ID or not ADMIN_ID:
-    print("LỖI: Chưa có file .env hoặc thiếu thông tin!")
-    print("Hãy chạy setup_config.bat trước.")
+    print("LỖI: Thiếu thông tin cấu hình!")
+    print("Local: chạy setup_config.bat để tạo file .env")
+    print("Railway: vào Variables và thêm BOT_TOKEN, GROUP_ID, ADMIN_ID")
     exit(1)
 # ============================================================
 
