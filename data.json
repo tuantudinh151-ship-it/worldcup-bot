@@ -134,6 +134,21 @@
       "poll_id": null,
       "poll_message_id": null,
       "locked": false
+    },
+    "TS079": {
+      "home_team": "Phap",
+      "away_team": "Bac Ireland",
+      "kickoff": "2026-06-09T02:10:00+07:00",
+      "round": "group",
+      "handicap": -1.0,
+      "home_odds": 1.13,
+      "away_odds": 19.0,
+      "bookmaker": "Thu cong",
+      "has_draw_option": true,
+      "result": null,
+      "poll_id": null,
+      "poll_message_id": null,
+      "locked": false
     }
   },
   "predictions": {
