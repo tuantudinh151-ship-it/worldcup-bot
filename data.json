@@ -101,8 +101,8 @@
       "bookmaker": "Thu cong",
       "has_draw_option": false,
       "result": null,
-      "poll_id": null,
-      "poll_message_id": null,
+      "poll_id": "6138606008085251003",
+      "poll_message_id": 27,
       "locked": false
     }
   },
