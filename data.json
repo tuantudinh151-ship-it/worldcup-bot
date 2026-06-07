@@ -106,7 +106,14 @@
       "locked": false
     }
   },
-  "predictions": {},
+  "predictions": {
+    "TS0050": {
+      "1216368366": {
+        "name": "Dinh Tu",
+        "choice": "away"
+      }
+    }
+  },
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
