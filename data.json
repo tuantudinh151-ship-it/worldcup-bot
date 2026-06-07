@@ -104,6 +104,21 @@
       "poll_id": "6138606008085251003",
       "poll_message_id": 27,
       "locked": true
+    },
+    "TS004": {
+      "home_team": "Ha Lan",
+      "away_team": "Uzbekistan",
+      "kickoff": "2026-06-09T01:45:00+07:00",
+      "round": "group",
+      "handicap": -0.5,
+      "home_odds": 1.27,
+      "away_odds": 9.5,
+      "bookmaker": "Thu cong",
+      "has_draw_option": false,
+      "result": null,
+      "poll_id": null,
+      "poll_message_id": null,
+      "locked": false
     }
   },
   "predictions": {
