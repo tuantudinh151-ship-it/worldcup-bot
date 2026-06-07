@@ -89,6 +89,21 @@
       "poll_id": null,
       "poll_message_id": null,
       "locked": false
+    },
+    "TS0050": {
+      "home_team": "Ecuador",
+      "away_team": "Guatemala",
+      "kickoff": "2026-06-08T03:00:00+07:00",
+      "round": "group",
+      "handicap": -3.5,
+      "home_odds": 5.0,
+      "away_odds": 1.17,
+      "bookmaker": "Thu cong",
+      "has_draw_option": false,
+      "result": null,
+      "poll_id": null,
+      "poll_message_id": null,
+      "locked": false
     }
   },
   "predictions": {},
