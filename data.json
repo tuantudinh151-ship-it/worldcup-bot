@@ -130,7 +130,7 @@
       "away_odds": 2.75,
       "bookmaker": "Thu cong",
       "has_draw_option": true,
-      "result": null,
+      "result": "home",
       "poll_id": "6138606008085251016",
       "poll_message_id": 38,
       "locked": false
@@ -243,7 +243,7 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 0
+      "debt": 50000
     }
   },
   "members": {
