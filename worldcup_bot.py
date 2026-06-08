@@ -3,6 +3,10 @@ from datetime import datetime, timedelta
 import pytz, requests
 import openpyxl
 from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm
 from openpyxl.utils import get_column_letter
 from telegram import Update
 from telegram.ext import Application, CommandHandler, PollAnswerHandler, ContextTypes
@@ -58,7 +62,7 @@ def build_rules() -> str:
         "Chào mừng bạn tham gia nhóm dự đoán kết quả World Cup 2026!\n\n"
         "━━━━━━━━━━━━━━━━━━━━\n\n"
         "<b>📋 CÁCH THAM GIA</b>\n"
-        "Gõ /join trong nhóm để đăng ký (chỉ làm 1 lần)\n\n"
+        "Gõ /thamgia trong nhóm để đăng ký (chỉ làm 1 lần)\n\n"
         "━━━━━━━━━━━━━━━━━━━━\n\n"
         "<b>⚽ CÁCH BÌNH CHỌN</b>\n"
         "Bot tự động gửi poll trước mỗi trận <b>20 tiếng</b>\n"
@@ -87,10 +91,10 @@ def build_rules() -> str:
         "Tiền nợ được tổng hợp tự động, admin thông báo khi cần đóng\n\n"
         "━━━━━━━━━━━━━━━━━━━━\n\n"
         "<b>📊 LỆNH HỮU ÍCH</b>\n"
-        "/matches — Xem trận sắp tới\n"
-        "/standings — Bảng xếp hạng nợ\n"
-        "/mypredictions — Lịch sử bình chọn của bạn\n"
-        "/myrules — Xem lại thể lệ này\n\n"
+        "/lichthidau — Xem trận sắp tới\n"
+        "/bangno — Bảng xếp hạng nợ\n"
+        "/lichsu — Lịch sử bình chọn của bạn\n"
+        "/thele — Xem lại thể lệ này\n\n"
         "━━━━━━━━━━━━━━━━━━━━\n\n"
         "<b>🤖 KẾT QUẢ &amp; TÍNH TIỀN</b>\n"
         "Sau mỗi trận, bot tự động:\n"
@@ -98,7 +102,7 @@ def build_rules() -> str:
         "✔️ Tính thắng/thua theo kèo\n"
         "✔️ Thông báo vào nhóm\n"
         "✔️ Cập nhật bảng nợ\n\n"
-        "Chúc mọi người may mắn! 🍀"
+        "━━━━━━━━━━━━━━━━━━━━\n\n""<b>💳 THANH TOÁN TIỀN THUA</b>\n""Chuyển khoản về số tài khoản:\n""<b>0969984192</b> — Ngân hàng <b>Vietinbank</b>\n""Nội dung: <i>[Tên] đóng tiền WC2026</i>\n\n""Chúc mọi người may mắn! 🍀"
     )
 
 RULES_TEXT = build_rules()
@@ -327,6 +331,10 @@ def format_handicap(handicap: float, home: str, away: str) -> str:
     elif h < 0:       return f"{home} chấp {abs(h)} trái"
     else:             return f"{away} chấp {h} trái"
 
+def _truncate_opt(s: str) -> str:
+    """Cắt option về tối đa 100 ký tự (giới hạn Telegram)."""
+    return s if len(s) <= 100 else s[:97] + "..."
+
 def build_poll_options(m: dict) -> list[str]:
     """
     Kèo nguyên (0, 1, 2...): 3 lựa chọn TRÊN / HÒA / DƯỚI
@@ -370,6 +378,42 @@ def get_choice_from_index(index: int, m: dict) -> str:
 #  GỬI VÀ KHÓA POLL
 # ============================================================
 
+async def remind_unvoted_job(match_id: str, app):
+    """Nhắc những ai chưa bình chọn, chạy trước kickoff 1 tiếng."""
+    data = load_data()
+    if match_id not in data["matches"]:
+        return
+    m = data["matches"][match_id]
+    if m.get("locked") or m.get("result"):
+        return
+
+    members = data.get("members", {})
+    preds   = data["predictions"].get(match_id, {})
+    unvoted = [member["name"] for uid, member in members.items() if uid not in preds]
+
+    if not unvoted:
+        return  # Mọi người đã bình chọn
+
+    kickoff = datetime.fromisoformat(m["kickoff"])
+    fee     = FEE.get(m["round"], 50000)
+    mentions = ", ".join(unvoted)
+
+    msg = (
+        f"⏰ NHẮC NHỞ - Còn 1 tiếng nữa bóng lăn!\n"
+        f"Trận {match_id}: {m['home_team']} vs {m['away_team']}\n"
+        f"Kickoff: {kickoff.strftime('%H:%M %d/%m')}\n\n"
+        f"CHƯA BÌNH CHỌN ({len(unvoted)} người):\n{mentions}\n\n"
+        f"⚠️ Không bình chọn sẽ bị tính THUA -{fee:,}đ!\n"
+        f"Bình chọn ngay tại poll đã ghim phía trên."
+    )
+    try:
+        await app.bot.send_message(chat_id=GROUP_ID, text=msg)
+        logger.info(f"Đã nhắc {len(unvoted)} người chưa bình chọn trận {match_id}")
+    except Exception as e:
+        logger.error(f"Lỗi nhắc nhở {match_id}: {e}")
+
+
+
 async def auto_send_poll_job(match_id: str, app):
     """Gửi poll vào nhóm và ghim lên đầu"""
     data = load_data()
@@ -390,6 +434,9 @@ async def auto_send_poll_job(match_id: str, app):
         f"Kickoff: {kickoff.strftime('%d/%m/%Y %H:%M')} | Phí thua: {fee:,}đ\n"
         f"Kèo: {hcap_text}{even_note}"
     )
+    # Telegram giới hạn question 300 ký tự
+    if len(question) > 300:
+        question = question[:297] + "..."
 
     try:
         # Poll ẨN DANH: thành viên không thấy ai vote gì, không thấy số phiếu
@@ -463,9 +510,9 @@ async def cmd_newmatch(update, context):
     if len(args) < 9:
         await update.message.reply_text(
             'Cu phap:\n'
-            '/newmatch <id> <doi1> vs <doi2> <ngay> <gio> <vong> <handicap> <odds_tren> <odds_duoi>\n'
+            '/themtran <id> <doi1> vs <doi2> <ngay> <gio> <vong> <handicap> <odds_tren> <odds_duoi>\n'
             'Vi du:\n'
-            '/newmatch TEST Brazil vs Argentina 2026-06-07 22:05 group -0.5 1.95 1.95\n'
+            '/themtran TEST Brazil vs Argentina 2026-06-07 22:05 group -0.5 1.95 1.95\n'
             'handicap: -0.5=nha chap nua | 0=keo chan | 1=khach chap 1'
         )
         return
@@ -512,14 +559,14 @@ async def cmd_newmatch(update, context):
             team1 + ' vs ' + team2 + '\n' +
             'Kickoff: ' + kickoff.strftime('%d/%m/%Y %H:%M') + '\n' +
             'Keo: ' + hcap_txt + ' | Phi thua: ' + str(fee) + 'd\n' +
-            'Go /sendpoll ' + match_id + ' de gui poll vao nhom.'
+            'Go /guibinhchon ' + match_id + ' de gui poll vao nhom.'
         )
     except Exception as e:
         await update.message.reply_text('Loi: ' + str(e))
 
 
 async def cmd_fetchodds(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Xem kèo mới từ API. /fetchodds"""
+    """Xem kèo mới từ API. /xemkeo"""
     if not is_admin(update.effective_user.id): return
     await update.message.reply_text("Đang lấy kèo...")
 
@@ -542,7 +589,7 @@ async def cmd_fetchodds(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Không có trận nào sắp tới.")
         return
 
-    msg = f"DANH SÁCH TRẬN ({len(upcoming)} trận)\n/autosetup để tự động tạo tất cả\n" + "="*32 + "\n"
+    msg = f"DANH SÁCH TRẬN ({len(upcoming)} trận)\n/laykeo để tự động tạo tất cả\n" + "="*32 + "\n"
     for i, (kickoff, p) in enumerate(upcoming[:12], 1):
         hcap = format_handicap(p["handicap"], p["home_team"], p["away_team"])
         even = " [CHẴN+HÒA]" if has_draw_option(p["handicap"]) else ""
@@ -555,7 +602,7 @@ async def cmd_fetchodds(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def cmd_autosetup(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Tự động tạo trận + lên lịch gửi poll và khóa. /autosetup [số_trận]"""
+    """Tự động tạo trận + lên lịch gửi poll và khóa. /laykeo [số_trận]"""
     if not is_admin(update.effective_user.id): return
     limit = int(context.args[0]) if context.args else 999
     await update.message.reply_text(f"Đang lấy kèo và tạo lịch...")
@@ -580,12 +627,15 @@ async def cmd_autosetup(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Tạo ID dạng WC001, WC002... theo thứ tự kickoff
         prefix = "WC" if not TEST_MODE else "TS"
-        existing_nums = []
-        for mid in data["matches"]:
-            if mid.startswith(prefix) and mid[len(prefix):].isdigit():
-                existing_nums.append(int(mid[len(prefix):]))
-        next_num = max(existing_nums, default=0) + 1 + created
-        match_id = f"{prefix}{next_num:03d}"
+        # Tính base một lần, tăng theo created trong vòng lặp
+        if created == 0:
+            existing_nums = [
+                int(mid[len(prefix):]) for mid in data["matches"]
+                if mid.startswith(prefix) and mid[len(prefix):].isdigit()
+            ]
+            context.bot_data["_next_match_num"] = max(existing_nums, default=0)
+        base_num = context.bot_data.get("_next_match_num", 0)
+        match_id = f"{prefix}{base_num + created + 1:03d}"
 
         # Kiểm tra trùng trận (cùng đội + cùng giờ)
         duplicate = any(
@@ -628,6 +678,7 @@ async def cmd_autosetup(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 args=[match_id, context.application],
                 id=f"lock_{match_id}", replace_existing=True)
 
+        context.bot_data["_next_match_num"] = base_num + created + 1
         created += 1
 
     save_data(data)
@@ -635,15 +686,15 @@ async def cmd_autosetup(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"Đã tạo {created} trận, bỏ qua {skipped} trận đã có.\n"
         f"Poll tự gửi trước {POLL_BEFORE} tiếng, ghim lên đầu nhóm.\n"
         f"Poll tự khóa + bỏ ghim đúng giờ kickoff.\n"
-        f"Dùng /matches để xem danh sách."
+        f"Dùng /lichthidau để xem danh sách."
     )
 
 
 async def cmd_sendpoll(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Gửi poll thủ công. /sendpoll <mã_trận>"""
+    """Gửi poll thủ công. /guibinhchon <mã_trận>"""
     if not is_admin(update.effective_user.id): return
     if not context.args:
-        await update.message.reply_text("Cú pháp: /sendpoll <mã_trận>")
+        await update.message.reply_text("Cú pháp: /guibinhchon <mã_trận>")
         return
     match_id = context.args[0].upper()
     await auto_send_poll_job(match_id, context.application)
@@ -651,10 +702,10 @@ async def cmd_sendpoll(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def cmd_lockpoll(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Khóa poll thủ công. /lockpoll <mã_trận>"""
+    """Khóa poll thủ công. /khoabinhchon <mã_trận>"""
     if not is_admin(update.effective_user.id): return
     if not context.args:
-        await update.message.reply_text("Cú pháp: /lockpoll <mã_trận>")
+        await update.message.reply_text("Cú pháp: /khoabinhchon <mã_trận>")
         return
     match_id = context.args[0].upper()
     await lock_poll_job(match_id, context.application)
@@ -663,14 +714,14 @@ async def cmd_lockpoll(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def cmd_result(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
-    Nhập kết quả kèo. /result <mã_trận> <home|draw|away>
+    Nhập kết quả kèo. /ketqua <mã_trận> <home|draw|away>
     home  = đội nhà thắng kèo (TRÊN)
     draw  = hòa kèo (chỉ với kèo chẵn, hoàn 50%)
     away  = đội khách thắng kèo (DƯỚI)
     """
     if not is_admin(update.effective_user.id): return
     if len(context.args) < 2:
-        await update.message.reply_text("Cú pháp: /result <mã_trận> <home|draw|away>")
+        await update.message.reply_text("Cú pháp: /ketqua <mã_trận> <home|draw|away>")
         return
 
     match_id = context.args[0].upper()
@@ -781,31 +832,246 @@ async def cmd_mypredictions(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(msg)
 
 
+async def cmd_bieudo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Vẽ biểu đồ diễn biến nợ theo thời gian. /bieudo"""
+    if not is_admin(update.effective_user.id): return
+    data = load_data()
+    members = data.get("members", {})
+    if not members:
+        await update.message.reply_text("Chưa có thành viên nào.")
+        return
+
+    await update.message.reply_text("Đang vẽ biểu đồ...")
+
+    # Lấy trận theo thứ tự thời gian
+    done = [(mid, m) for mid, m in data["matches"].items() if m.get("result")]
+    done.sort(key=lambda x: x[1]["kickoff"])
+
+    if not done:
+        await update.message.reply_text("Chưa có trận nào có kết quả để vẽ.")
+        return
+
+    # Tính nợ tích lũy của từng người qua từng trận
+    cumulative = {uid: [0] for uid in members}
+    labels = ["Bắt đầu"]
+
+    for mid, m in done:
+        result = m["result"]
+        fee    = FEE.get(m["round"], 50000)
+        preds  = data["predictions"].get(mid, {})
+        labels.append(mid)
+        for uid in members:
+            prev = cumulative[uid][-1]
+            if uid in preds:
+                add = 0 if preds[uid]["choice"] == result else fee
+            else:
+                add = fee  # không bình chọn = thua
+            cumulative[uid].append(prev + add)
+
+    # Vẽ biểu đồ
+    try:
+        plt.figure(figsize=(12, 7))
+        x = range(len(labels))
+        for uid, member in members.items():
+            plt.plot(x, cumulative[uid], marker="o", linewidth=2, label=member["name"])
+
+        plt.xlabel("Trận đấu")
+        plt.ylabel("Nợ tích lũy (VNĐ)")
+        plt.title("DIỄN BIẾN NỢ THEO TRẬN - WORLD CUP 2026")
+        plt.xticks(x, labels, rotation=45, ha="right")
+        plt.legend(loc="upper left", fontsize=9)
+        plt.grid(True, alpha=0.3)
+        plt.tight_layout()
+
+        # Format trục y theo nghìn đồng
+        ax = plt.gca()
+        ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda v, p: f"{int(v):,}"))
+
+        chart_path = "debt_chart.png"
+        plt.savefig(chart_path, dpi=100, bbox_inches="tight")
+        plt.close()
+
+        # Gửi vào nhóm và cho admin
+        with open(chart_path, "rb") as f:
+            await context.bot.send_photo(
+                chat_id=GROUP_ID,
+                photo=f,
+                caption=f"📈 Diễn biến nợ qua {len(done)} trận đã đấu"
+            )
+        await update.message.reply_text("Đã gửi biểu đồ vào nhóm!")
+    except Exception as e:
+        await update.message.reply_text(f"Lỗi vẽ biểu đồ: {e}")
+
+
+
+async def cmd_thongke(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Bảng xếp hạng VUA DỰ ĐOÁN - ai đoán đúng nhiều nhất. /thongke"""
+    data = load_data()
+    members = data.get("members", {})
+    if not members:
+        await update.message.reply_text("Chưa có thành viên nào.")
+        return
+
+    # Tính thống kê từng người
+    stats = {}
+    for uid, member in members.items():
+        stats[uid] = {"name": member["name"], "win": 0, "lose": 0, "novote": 0, "streak": 0, "max_streak": 0}
+
+    # Duyệt các trận đã có kết quả theo thứ tự thời gian
+    done = [(mid, m) for mid, m in data["matches"].items() if m.get("result")]
+    done.sort(key=lambda x: x[1]["kickoff"])
+
+    for mid, m in done:
+        result = m["result"]
+        preds  = data["predictions"].get(mid, {})
+        for uid in members:
+            if uid not in stats:
+                continue
+            if uid in preds:
+                if preds[uid]["choice"] == result:
+                    stats[uid]["win"] += 1
+                    stats[uid]["streak"] += 1
+                    stats[uid]["max_streak"] = max(stats[uid]["max_streak"], stats[uid]["streak"])
+                else:
+                    stats[uid]["lose"] += 1
+                    stats[uid]["streak"] = 0
+            else:
+                stats[uid]["novote"] += 1
+                stats[uid]["streak"] = 0
+
+    # Sắp xếp theo số trận thắng, rồi tỷ lệ thắng
+    def win_rate(s):
+        total = s["win"] + s["lose"] + s["novote"]
+        return s["win"] / total if total > 0 else 0
+
+    ranked = sorted(stats.values(),
+                    key=lambda s: (s["win"], win_rate(s)),
+                    reverse=True)
+
+    medals = ["🥇", "🥈", "🥉"]
+    msg = "🏆 BẢNG XẾP HẠNG VUA DỰ ĐOÁN\n" + "="*30 + "\n\n"
+    for i, s in enumerate(ranked):
+        total = s["win"] + s["lose"] + s["novote"]
+        rate  = round(win_rate(s) * 100)
+        icon  = medals[i] if i < 3 else f"{i+1}."
+        msg += (
+            f"{icon} {s['name']}\n"
+            f"    Thắng: {s['win']} | Thua: {s['lose']} | KBQ: {s['novote']}\n"
+            f"    Tỷ lệ đúng: {rate}% | Chuỗi thắng max: {s['max_streak']}\n\n"
+        )
+
+    if len(done) == 0:
+        msg += "Chưa có trận nào có kết quả."
+    else:
+        msg += f"Tổng số trận đã đấu: {len(done)}"
+
+    await update.message.reply_text(msg)
+
+
+async def cmd_mystat(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Thống kê cá nhân chi tiết. /thongketoi"""
+    uid  = str(update.effective_user.id)
+    data = load_data()
+
+    win = lose = novote = streak = max_streak = 0
+    done = [(mid, m) for mid, m in data["matches"].items() if m.get("result")]
+    done.sort(key=lambda x: x[1]["kickoff"])
+
+    for mid, m in done:
+        result = m["result"]
+        preds  = data["predictions"].get(mid, {})
+        if uid in preds:
+            if preds[uid]["choice"] == result:
+                win += 1; streak += 1; max_streak = max(max_streak, streak)
+            else:
+                lose += 1; streak = 0
+        elif uid in data.get("members", {}):
+            novote += 1; streak = 0
+
+    total = win + lose + novote
+    if total == 0:
+        await update.message.reply_text("Bạn chưa tham gia trận nào có kết quả.")
+        return
+
+    rate = round(win / total * 100)
+    debt = data["players"].get(uid, {}).get("debt", 0)
+    paid = data.get("members", {}).get(uid, {}).get("paid", 0)
+
+    # Thanh tiến trình tỷ lệ thắng
+    filled = round(rate / 10)
+    bar = "█" * filled + "░" * (10 - filled)
+
+    msg = (
+        f"📊 THỐNG KÊ CỦA BẠN\n" + "="*28 + "\n\n"
+        f"Tổng trận: {total}\n"
+        f"✅ Thắng: {win}\n"
+        f"❌ Thua: {lose}\n"
+        f"⚠️ Không bình chọn: {novote}\n\n"
+        f"Tỷ lệ đúng: {rate}%\n"
+        f"{bar}\n\n"
+        f"🔥 Chuỗi thắng dài nhất: {max_streak}\n"
+        f"💰 Tổng nợ: {debt:,}đ | Đã đóng: {paid:,}đ\n"
+        f"Còn lại: {max(0, debt-paid):,}đ"
+    )
+    await update.message.reply_text(msg)
+
+
+
 async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
+    is_ad = is_admin(update.effective_user.id)
+    msg = (
         "HƯỚNG DẪN BOT WORLD CUP 2026\n" + "="*30 + "\n\n"
-        "LỆNH TẤT CẢ:\n"
-        "/join — Đăng ký tham gia\n""/matches — Trận sắp tới\n"
-        "/standings — Bảng nợ tiền\n"
-        "/mypredictions — Lịch sử của bạn\n\n"
-        "LỆNH ADMIN:\n"
-        "/newmatch — Tạo trận thủ công (test)\n""/fetchodds — Xem kèo mới từ nhà cái\n"
-        "/autosetup [số] — Tạo trận + lên lịch tự động\n"
-        "/sendpoll <id> — Gửi + ghim poll thủ công\n"
-        "/lockpoll <id> — Khóa + bỏ ghim thủ công\n"
-        "/result <id> <home|draw|away> — Nhập kết quả\n\n"
+        "LỆNH THÀNH VIÊN:\n"
+        "/thamgia — Đăng ký tham gia\n"
+        "/lichthidau — Xem trận sắp tới\n"
+        "/bangno — Bảng xếp hạng nợ\n"
+        "/lichsu — Lịch sử bình chọn của bạn\n"
+        "/thele — Xem thể lệ chơi\n\n"
+    )
+    if is_ad:
+        msg += (
+            "LỆNH ADMIN — VẬN HÀNH:\n"
+            "/laykeo [số] — Lấy lịch + kèo tự động\n"
+            "/xemkeo — Xem kèo từ nhà cái\n"
+            "/capnhatkeo — Cập nhật kèo mới nhất\n"
+            "/themtran — Tạo trận thủ công\n"
+            "/guibinhchon <id> — Gửi + ghim poll\n"
+            "/khoabinhchon <id> — Khóa poll\n"
+            "/laykequa — Lấy kết quả tự động\n"
+            "/ketqua <id> <home|draw|away> — Nhập kết quả tay\n"
+            "/xuatfile — Xuất Excel tính tiền\n\n"
+            "LỆNH ADMIN — THÀNH VIÊN & TIỀN:\n"
+            "/danhsach — Danh sách thành viên\n"
+            "/themthanhvien <id> <tên> — Thêm thủ công\n"
+            "/xoathanhvien <id> — Xóa thành viên\n"
+            "/dathanhtoan <tên> <tiền> — Xác nhận đóng\n"
+            "/conno — Danh sách còn nợ\n"
+            "/luudata — Backup lên GitHub\n\n"
+            "LỆNH ADMIN — SỬA DỮ LIỆU:\n"
+            "/xemtran <id> — Chi tiết trận\n"
+            "/suatran <id> <field> <giá trị> — Sửa trận\n"
+            "/xoatran <id> — Xóa trận\n"
+            "/suakequa <id> <kết quả> — Sửa kết quả\n"
+            "/suano <tên> <tiền> — Sửa nợ\n"
+            "/suadathanhtoan <tên> <tiền> — Sửa tiền đã đóng\n\n"
+            "LỆNH ADMIN — HỆ THỐNG:\n"
+            "/chedo — Xem chế độ test/WC\n"
+            "/guithele — Gửi thể lệ vào nhóm\n"
+            "/xoatrancu <TS|WC|all> — Xóa trận theo loại\n"
+            "/danhsachgiai — Danh sách giải có kèo\n"
+            "/resetwc confirm — Reset sang World Cup\n"
+            "/xoahetdata confirm — Xóa toàn bộ\n\n"
+        )
+    msg += (
         "PHÍ THUA:\n"
-        "Vòng bảng: 50,000đ | KO: 100,000đ | CK: 200,000đ\n\n"
+        "Vòng bảng: 50,000đ | Loại trực tiếp: 100,000đ | Chung kết: 200,000đ\n\n"
         "KÈO CHÂU Á:\n"
         "TRÊN = đội chấp thắng kèo\n"
         "DƯỚI = đội được chấp thắng kèo\n"
-        "HÒA / HÒA KÈO = chỉ xuất hiện ở kèo nguyên (0, 1, 2...)\n"
-        "  Sai = mất 100% trong mọi trường hợp\n\n"
-        "BÌNH CHỌN CÔNG KHAI:\n"
-        "  - Mọi người thấy ai bình chọn gì\n"
-        "  - Có thể đổi ý cho đến khi poll khóa\n"
-        "  - Có thể đổi ý cho đến khi poll khóa!"
+        "HÒA = chỉ ở kèo nguyên (0, 1, 2...)\n"
+        "Sai = mất 100%, không bình chọn = tính thua"
     )
+    await update.message.reply_text(msg)
 
 
 # ============================================================
@@ -854,14 +1120,14 @@ async def handle_poll_answer(update: Update, context: ContextTypes.DEFAULT_TYPE)
 async def cmd_editresult(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     Sửa kết quả trận đã có, tính lại nợ chính xác.
-    /editresult <match_id> <home|draw|away>
+    /suakequa <match_id> <home|draw|away>
     Bot sẽ hoàn lại nợ cũ rồi tính lại từ đầu.
     """
     if not is_admin(update.effective_user.id): return
     if len(context.args) < 2:
         await update.message.reply_text(
-            "Cú pháp: /editresult <match_id> <home|draw|away>\n"
-            "Ví dụ: /editresult TEST01 home\n\n"
+            "Cú pháp: /suakequa <match_id> <home|draw|away>\n"
+            "Ví dụ: /suakequa TEST01 home\n\n"
             "Bot sẽ hoàn lại nợ cũ và tính lại từ đầu."
         )
         return
@@ -935,16 +1201,16 @@ async def cmd_editresult(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def cmd_editdebt(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     Sửa nợ thủ công cho 1 thành viên.
-    /editdebt <tên hoặc ID> <số_tiền_mới>
-    Ví dụ: /editdebt Văn A 150000   (đặt nợ = 150k)
-            /editdebt Văn A 0        (xóa nợ)
+    /suano <tên hoặc ID> <số_tiền_mới>
+    Ví dụ: /suano Văn A 150000   (đặt nợ = 150k)
+            /suano Văn A 0        (xóa nợ)
     """
     if not is_admin(update.effective_user.id): return
     if len(context.args) < 2:
         await update.message.reply_text(
-            "Cú pháp: /editdebt <tên hoặc ID> <số_tiền_nợ_mới>\n"
-            "Ví dụ: /editdebt Văn A 150000\n"
-            "        /editdebt 123456789 0"
+            "Cú pháp: /suano <tên hoặc ID> <số_tiền_nợ_mới>\n"
+            "Ví dụ: /suano Văn A 150000\n"
+            "        /suano 123456789 0"
         )
         return
 
@@ -989,13 +1255,13 @@ async def cmd_editdebt(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def cmd_editpaid(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     Sửa số tiền đã đóng của thành viên.
-    /editpaid <tên hoặc ID> <số_tiền_đã_đóng_mới>
+    /suadathanhtoan <tên hoặc ID> <số_tiền_đã_đóng_mới>
     """
     if not is_admin(update.effective_user.id): return
     if len(context.args) < 2:
         await update.message.reply_text(
-            "Cú pháp: /editpaid <tên hoặc ID> <số_tiền_đã_đóng>\n"
-            "Ví dụ: /editpaid Văn A 100000"
+            "Cú pháp: /suadathanhtoan <tên hoặc ID> <số_tiền_đã_đóng>\n"
+            "Ví dụ: /suadathanhtoan Văn A 100000"
         )
         return
 
@@ -1042,11 +1308,11 @@ async def cmd_editpaid(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def cmd_viewmatch(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     Xem chi tiết 1 trận: ai bình chọn gì, kết quả, nợ.
-    /viewmatch <match_id>
+    /xemtran <match_id>
     """
     if not is_admin(update.effective_user.id): return
     if not context.args:
-        await update.message.reply_text("Cú pháp: /viewmatch <match_id>")
+        await update.message.reply_text("Cú pháp: /xemtran <match_id>")
         return
 
     match_id = context.args[0].upper()
@@ -1093,7 +1359,7 @@ async def cmd_viewmatch(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def cmd_listsports(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Xem danh sách sport keys có sẵn để dùng test. /listsports"""
+    """Xem danh sách sport keys có sẵn để dùng test. /danhsachgiai"""
     if not is_admin(update.effective_user.id): return
     await update.message.reply_text("Đang lấy danh sách từ API...")
     sports = fetch_available_sports()
@@ -1113,7 +1379,7 @@ async def cmd_listsports(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def cmd_testmode(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Xem trạng thái test mode và số trận theo từng loại. /testmode"""
+    """Xem trạng thái test mode và số trận theo từng loại. /chedo"""
     if not is_admin(update.effective_user.id): return
     data = load_data()
     matches = data.get("matches", {})
@@ -1136,15 +1402,15 @@ async def cmd_testmode(update: Update, context: ContextTypes.DEFAULT_TYPE):
         msg += f"• Khác: {other} trận\n"
 
     if ts_count > 0 and not TEST_MODE:
-        msg += "\n⚠️ Còn trận TEST trong khi đang ở chế độ WC!\nGõ /clearmatches TS để xóa"
+        msg += "\n⚠️ Còn trận TEST trong khi đang ở chế độ WC!\nGõ /xoatrancu TS để xóa"
     if wc_count > 0 and TEST_MODE:
-        msg += "\n⚠️ Còn trận WC trong khi đang ở chế độ TEST!\nGõ /clearmatches WC để xóa"
+        msg += "\n⚠️ Còn trận WC trong khi đang ở chế độ TEST!\nGõ /xoatrancu WC để xóa"
 
     msg += (
         "\n\nLỆNH CHUYỂN CHẾ ĐỘ:\n"
-        "/clearmatches TS — Xóa trận test\n"
-        "/clearmatches WC — Xóa trận World Cup\n"
-        "/resetforwc confirm — Reset hẳn sang WC\n"
+        "/xoatrancu TS — Xóa trận test\n"
+        "/xoatrancu WC — Xóa trận World Cup\n"
+        "/resetwc confirm — Reset hẳn sang WC\n"
     )
     await update.message.reply_text(msg)
 
@@ -1152,10 +1418,10 @@ async def cmd_testmode(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def cmd_clearmatches(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     Xóa trận theo chế độ hiện tại.
-    /clearmatches       — xóa trận theo prefix hiện tại (TS hoặc WC)
-    /clearmatches all   — xóa tất cả trận
-    /clearmatches TS    — xóa trận test (TS001, TS002...)
-    /clearmatches WC    — xóa trận World Cup (WC001, WC002...)
+    /xoatrancu       — xóa trận theo prefix hiện tại (TS hoặc WC)
+    /xoatrancu all   — xóa tất cả trận
+    /xoatrancu TS    — xóa trận test (TS001, TS002...)
+    /xoatrancu WC    — xóa trận World Cup (WC001, WC002...)
     """
     if not is_admin(update.effective_user.id): return
 
@@ -1183,7 +1449,7 @@ async def cmd_clearmatches(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         f"Đã xóa {len(to_delete)} trận: {', '.join(to_delete[:10])}{'...' if len(to_delete) > 10 else ''}\n"
         f"Bình chọn liên quan cũng đã xóa.\n\n"
-        f"Lưu ý: nợ tiền KHÔNG reset. Dùng /resetforwc để reset cả nợ."
+        f"Lưu ý: nợ tiền KHÔNG reset. Dùng /resetwc để reset cả nợ."
     )
 
 
@@ -1191,7 +1457,7 @@ async def cmd_clearmatches(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def cmd_resetforwc(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     Xóa toàn bộ dữ liệu test, chuẩn bị cho World Cup thật.
-    /resetforwc confirm
+    /resetwc confirm
     """
     if not is_admin(update.effective_user.id): return
     if not context.args or context.args[0] != "confirm":
@@ -1201,7 +1467,7 @@ async def cmd_resetforwc(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "2. Xóa toàn bộ bình chọn test\n"
             "3. Reset nợ về 0 cho tất cả thành viên\n"
             "4. GIỮ LẠI danh sách thành viên\n\n"
-            "Nếu chắc chắn, gõ:\n/resetforwc confirm"
+            "Nếu chắc chắn, gõ:\n/resetwc confirm"
         )
         return
 
@@ -1230,27 +1496,229 @@ async def cmd_resetforwc(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"Đã xóa: tất cả trận giao hữu + bình chọn\n\n"
         f"Bước tiếp theo:\n"
         f"1. Tắt TEST_MODE trong Railway Variables\n"
-        f"2. Gõ /autosetup để lấy lịch World Cup"
+        f"2. Gõ /laykeo để lấy lịch World Cup"
     )
     await context.bot.send_message(
         chat_id=GROUP_ID,
         text="THÔNG BÁO: Hệ thống đã reset, sẵn sàng cho World Cup 2026!\n"
-             "Các thành viên không cần /join lại.\nChờ lịch thi đấu chính thức nhé!"
+             "Các thành viên không cần /thamgia lại.\nChờ lịch thi đấu chính thức nhé!"
     )
+
+
+
+async def cmd_updateodds(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Cập nhật kèo mới nhất từ nhà cái cho các trận chưa diễn ra.
+    /capnhatkeo
+    Dùng khi kèo thay đổi sau khi đã tạo trận.
+    """
+    if not is_admin(update.effective_user.id): return
+    await update.message.reply_text("Đang lấy kèo mới nhất từ nhà cái...")
+
+    games = fetch_odds("spreads")
+    if not games:
+        await update.message.reply_text("Không lấy được dữ liệu. Kiểm tra ODDS_API_KEY.")
+        return
+
+    data     = load_data()
+    now      = datetime.now(TZ)
+    updated  = 0
+    skipped  = 0
+
+    # Tạo map tên đội → kèo mới để tra nhanh
+    new_odds = {}
+    for g in games:
+        p = parse_asian_handicap(g)
+        if not p: continue
+        key = (p["home_team"].lower(), p["away_team"].lower())
+        new_odds[key] = p
+
+    for match_id, m in data["matches"].items():
+        # Bỏ qua trận đã có kết quả hoặc đã kickoff
+        if m.get("result"): continue
+        kickoff = datetime.fromisoformat(m["kickoff"])
+        if kickoff <= now: continue
+
+        key = (m["home_team"].lower(), m["away_team"].lower())
+        p   = new_odds.get(key)
+        if not p:
+            skipped += 1
+            continue
+
+        h_new    = normalize_handicap(p["handicap"])
+        changed  = []
+        if abs(h_new - m.get("handicap", 0)) > 0.01:
+            changed.append(f"kèo {m['handicap']} → {h_new}")
+            data["matches"][match_id]["handicap"]       = h_new
+            data["matches"][match_id]["has_draw_option"] = has_draw_option(h_new)
+        if abs(p["home_odds"] - m.get("home_odds", 0)) > 0.01:
+            changed.append(f"trên {m['home_odds']} → {p['home_odds']}")
+            data["matches"][match_id]["home_odds"] = p["home_odds"]
+        if abs(p["away_odds"] - m.get("away_odds", 0)) > 0.01:
+            changed.append(f"dưới {m['away_odds']} → {p['away_odds']}")
+            data["matches"][match_id]["away_odds"] = p["away_odds"]
+
+        if changed:
+            data["matches"][match_id]["bookmaker"] = p["bookmaker"]
+            updated += 1
+        else:
+            skipped += 1
+
+    save_data(data)
+
+    msg = (
+        f"Cập nhật kèo hoàn tất!\n"
+        f"Đã cập nhật: {updated} trận\n"
+        f"Không thay đổi: {skipped} trận\n\n"
+    )
+    if updated > 0:
+        msg += "Lưu ý: Nếu poll đã gửi, kèo hiển thị trong poll KHÔNG tự thay đổi.\n"
+        msg += "Dùng /khoabinhchon rồi /guibinhchon để gửi lại poll với kèo mới."
+    await update.message.reply_text(msg)
+
+
+
+async def cmd_deletematch(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Xóa 1 trận khỏi hệ thống.
+    /xoatran <id>
+    """
+    if not is_admin(update.effective_user.id): return
+    if not context.args:
+        await update.message.reply_text("Cú pháp: /xoatran <id>\nVD: /xoatran TS001")
+        return
+
+    match_id = context.args[0].upper()
+    data = load_data()
+    if match_id not in data["matches"]:
+        await update.message.reply_text(f"Không tìm thấy trận {match_id}.")
+        return
+
+    m = data["matches"][match_id]
+    # Bỏ ghim poll nếu đang ghim
+    if m.get("poll_message_id") and not m.get("locked"):
+        try:
+            await context.bot.unpin_chat_message(
+                chat_id=GROUP_ID,
+                message_id=m["poll_message_id"]
+            )
+        except Exception:
+            pass
+
+    # Xóa trận + bình chọn liên quan
+    del data["matches"][match_id]
+    data["predictions"].pop(match_id, None)
+    save_data(data)
+
+    await update.message.reply_text(
+        f"Đã xóa trận {match_id}: {m['home_team']} vs {m['away_team']}\n"
+        f"Bình chọn liên quan cũng đã xóa.\n"
+        f"Lưu ý: nợ tiền KHÔNG bị hoàn lại."
+    )
+
+
+async def cmd_editmatch(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Chỉnh sửa thông tin trận đấu.
+    /suatran <id> <field> <giá trị mới>
+    Field: kickoff | handicap | home_odds | away_odds | round | home_team | away_team
+    VD: /suatran TS001 kickoff 2026-06-10 02:00
+        /suatran TS001 handicap -0.75
+        /suatran TS001 home_odds 1.85
+        /suatran TS001 round knockout
+    """
+    if not is_admin(update.effective_user.id): return
+    if len(context.args) < 3:
+        await update.message.reply_text(
+            "Cú pháp: /suatran <id> <field> <giá trị>\n\n"
+            "Các field có thể sửa:\n"
+            "• kickoff — VD: 2026-06-10 02:00\n"
+            "• handicap — VD: -0.75\n"
+            "• home_odds — VD: 1.85\n"
+            "• away_odds — VD: 1.95\n"
+            "• round — VD: group / knockout / final\n"
+            "• home_team — VD: Brazil\n"
+            "• away_team — VD: Argentina"
+        )
+        return
+
+    match_id = context.args[0].upper()
+    field    = context.args[1].lower()
+    value    = " ".join(context.args[2:])
+    data     = load_data()
+
+    if match_id not in data["matches"]:
+        await update.message.reply_text(f"Không tìm thấy trận {match_id}.")
+        return
+
+    m       = data["matches"][match_id]
+    allowed = ["kickoff", "handicap", "home_odds", "away_odds", "round", "home_team", "away_team"]
+
+    if field not in allowed:
+        await update.message.reply_text(
+            f"Field không hợp lệ. Chọn một trong:\n{', '.join(allowed)}"
+        )
+        return
+
+    old_val = m.get(field, "?")
+    try:
+        if field == "kickoff":
+            # Parse ngày giờ
+            kickoff = TZ.localize(datetime.strptime(value, "%Y-%m-%d %H:%M"))
+            data["matches"][match_id]["kickoff"] = kickoff.isoformat()
+            # Cập nhật lịch tự động
+            scheduler = context.bot_data.get("scheduler")
+            if scheduler:
+                now = datetime.now(TZ)
+                send_time = kickoff - timedelta(hours=POLL_BEFORE)
+                if send_time > now and not m.get("poll_message_id"):
+                    scheduler.add_job(auto_send_poll_job, "date", run_date=send_time,
+                        args=[match_id, context.application],
+                        id=f"send_{match_id}", replace_existing=True)
+                if kickoff > now and not m.get("locked"):
+                    scheduler.add_job(lock_poll_job, "date", run_date=kickoff,
+                        args=[match_id, context.application],
+                        id=f"lock_{match_id}", replace_existing=True)
+            new_val = kickoff.strftime("%d/%m/%Y %H:%M")
+        elif field in ["handicap", "home_odds", "away_odds"]:
+            new_val = float(value)
+            data["matches"][match_id][field] = new_val
+            if field == "handicap":
+                data["matches"][match_id]["handicap"] = normalize_handicap(new_val)
+                data["matches"][match_id]["has_draw_option"] = has_draw_option(new_val)
+                new_val = normalize_handicap(new_val)
+        elif field == "round":
+            if value not in ["group", "knockout", "final"]:
+                await update.message.reply_text("round phải là: group / knockout / final")
+                return
+            data["matches"][match_id]["round"] = value
+            new_val = value
+        else:
+            data["matches"][match_id][field] = value
+            new_val = value
+
+        save_data(data)
+        await update.message.reply_text(
+            f"Đã cập nhật trận {match_id}:\n"
+            f"{field}: {old_val} → {new_val}\n\n"
+            f"Dùng /xemtran {match_id} để xem lại chi tiết."
+        )
+    except ValueError as e:
+        await update.message.reply_text(f"Giá trị không hợp lệ: {e}")
 
 
 
 async def cmd_resetdata(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     Xóa toàn bộ dữ liệu test, bắt đầu lại từ đầu.
-    /resetdata confirm
+    /xoahetdata confirm
     """
     if not is_admin(update.effective_user.id): return
     if not context.args or context.args[0] != "confirm":
         await update.message.reply_text(
             "CẢNH BÁO: Lệnh này xóa TOÀN BỘ dữ liệu!\n"
             "Bao gồm: thành viên, trận đấu, bình chọn, nợ tiền.\n\n"
-            "Nếu chắc chắn, gõ:\n/resetdata confirm"
+            "Nếu chắc chắn, gõ:\n/xoahetdata confirm"
         )
         return
     # Xóa sạch
@@ -1260,13 +1728,13 @@ async def cmd_resetdata(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Đã xóa toàn bộ dữ liệu!\n"
         "Bot sẵn sàng cho World Cup 2026.\n\n"
         "Bắt đầu bằng:\n"
-        "1. /autosetup — lấy lịch thi đấu\n"
-        "2. Nhờ thành viên gõ /join trong nhóm"
+        "1. /laykeo — lấy lịch thi đấu\n"
+        "2. Nhờ thành viên gõ /thamgia trong nhóm"
     )
 
 
 async def cmd_syncdata(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Sync data lên GitHub thủ công. /syncdata"""
+    """Sync data lên GitHub thủ công. /luudata"""
     if not is_admin(update.effective_user.id): return
     if not GITHUB_TOKEN:
         await update.message.reply_text("Chưa có GITHUB_TOKEN trong Variables.")
@@ -1307,6 +1775,13 @@ async def post_init(application):
             scheduler.add_job(lock_poll_job, "date", run_date=kickoff,
                 args=[match_id, application], id=f"lock_{match_id}", replace_existing=True)
             restored += 1
+
+        # Khôi phục lịch nhắc nhở trước 1 tiếng
+        if not m.get("locked") and not m.get("result") and kickoff > now:
+            remind_time = kickoff - timedelta(hours=1)
+            if remind_time > now:
+                scheduler.add_job(remind_unvoted_job, "date", run_date=remind_time,
+                    args=[match_id, application], id=f"remind_{match_id}", replace_existing=True)
 
         # Khôi phục lịch lấy kết quả tự động
         if not m.get("result") and kickoff < now:
@@ -1360,6 +1835,9 @@ def fetch_match_result_api(home_team: str, away_team: str, match_date: str) -> d
             if (home_team.lower() in h.lower() or h.lower() in home_team.lower()) and \
                (away_team.lower() in a.lower() or a.lower() in away_team.lower()):
                 goals = fix["goals"]
+                # Bỏ qua nếu chưa có tỷ số (trận hoãn/chưa đá)
+                if goals["home"] is None or goals["away"] is None:
+                    return None
                 return {
                     "home_score": goals["home"],
                     "away_score": goals["away"]
@@ -1418,6 +1896,20 @@ async def auto_fetch_result_job(match_id: str, app):
         logger.warning(f"Không có APIFOOTBALL_KEY, bỏ qua auto fetch trận {match_id}")
         return
 
+    # Test mode dùng giao hữu - API-Football league khác, không tự lấy được
+    if TEST_MODE:
+        logger.info(f"TEST MODE: bỏ qua auto fetch trận {match_id}, nhập thủ công bằng /ketqua")
+        try:
+            await app.bot.send_message(
+                chat_id=ADMIN_ID,
+                text=f"[TEST] Trận {match_id} đã kết thúc.\n"
+                     f"{m['home_team']} vs {m['away_team']}\n"
+                     f"Nhập kết quả thủ công: /ketqua {match_id} <home|draw|away>"
+            )
+        except Exception:
+            pass
+        return
+
     kickoff    = datetime.fromisoformat(m["kickoff"])
     match_date = kickoff.strftime("%Y-%m-%d")
     score      = fetch_match_result_api(m["home_team"], m["away_team"], match_date)
@@ -1443,7 +1935,7 @@ async def auto_fetch_result_job(match_id: str, app):
                 chat_id=ADMIN_ID,
                 text=f"Không tự động lấy được kết quả trận {match_id}\n"
                      f"{m['home_team']} vs {m['away_team']}\n"
-                     f"Hãy nhập thủ công bằng /result {match_id} <home|draw|away>"
+                     f"Hãy nhập thủ công bằng /ketqua {match_id} <home|draw|away>"
             )
         return
 
@@ -1498,7 +1990,7 @@ async def auto_fetch_result_job(match_id: str, app):
 async def cmd_fetchresult(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     Tự động lấy kết quả từ API-Football cho tất cả trận đã kết thúc.
-    /fetchresult
+    /laykequa
     """
     if not is_admin(update.effective_user.id): return
     if not APIFOOTBALL_KEY:
@@ -1576,7 +2068,7 @@ async def cmd_fetchresult(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         f"Đã cập nhật {updated} trận.\n"
         f"Không tìm thấy kết quả: {errors} trận.\n"
-        f"Gõ /excel để xuất file tính tiền."
+        f"Gõ /xuatfile để xuất file tính tiền."
     )
 
 
@@ -1586,7 +2078,7 @@ async def cmd_fetchresult(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def cmd_rules(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Gửi thể lệ vào nhóm. /rules"""
+    """Gửi thể lệ vào nhóm. /guithele"""
     if not is_admin(update.effective_user.id): return
     await context.bot.send_message(
         chat_id=GROUP_ID,
@@ -1597,7 +2089,7 @@ async def cmd_rules(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def cmd_myrules(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Xem thể lệ cá nhân. /myrules"""
+    """Xem thể lệ cá nhân. /thele"""
     await update.message.reply_text(
         RULES_TEXT,
         parse_mode=RULES_PARSE_MODE
@@ -1606,7 +2098,7 @@ async def cmd_myrules(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def cmd_join(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Thành viên tự đăng ký tham gia. Gõ /join trong nhóm."""
+    """Thành viên tự đăng ký tham gia. Gõ /thamgia trong nhóm."""
     user    = update.effective_user
     user_id = str(user.id)
     name    = user.full_name
@@ -1614,7 +2106,7 @@ async def cmd_join(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if user_id in data.get("members", {}):
         await update.message.reply_text(
-            f"Bạn đã đăng ký rồi: {name}\nGõ /mypredictions để xem lịch sử bình chọn."
+            f"Bạn đã đăng ký rồi: {name}\nGõ /lichsu để xem lịch sử bình chọn."
         )
         return
 
@@ -1651,14 +2143,14 @@ async def cmd_join(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def cmd_members(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Xem danh sách thành viên đã đăng ký. /members"""
+    """Xem danh sách thành viên đã đăng ký. /danhsach"""
     if not is_admin(update.effective_user.id): return
     data    = load_data()
     members = data.get("members", {})
     if not members:
         await update.message.reply_text(
             "Chưa có thành viên nào.\n"
-            "Nhờ mọi người gõ /join trong nhóm để đăng ký."
+            "Nhờ mọi người gõ /thamgia trong nhóm để đăng ký."
         )
         return
     msg = f"DANH SÁCH THÀNH VIÊN ({len(members)} người)\n" + "="*28 + "\n"
@@ -1672,10 +2164,10 @@ async def cmd_members(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def cmd_removemember(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Xóa thành viên khỏi danh sách. /removemember <user_id>"""
+    """Xóa thành viên khỏi danh sách. /xoathanhvien <user_id>"""
     if not is_admin(update.effective_user.id): return
     if not context.args:
-        await update.message.reply_text("Cú pháp: /removemember <user_id>")
+        await update.message.reply_text("Cú pháp: /xoathanhvien <user_id>")
         return
     uid  = str(context.args[0])
     data = load_data()
@@ -1691,14 +2183,14 @@ async def cmd_removemember(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def cmd_addmember(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     Thêm thành viên vào danh sách tham gia.
-    /addmember @username TênHiển_Thị
-    hoặc /addmember 123456789 Tên
+    /themthanhvien @username TênHiển_Thị
+    hoặc /themthanhvien 123456789 Tên
     """
     if not is_admin(update.effective_user.id): return
     if len(context.args) < 2:
         await update.message.reply_text(
-            "Cú pháp: /addmember <user_id> <Tên>\n"
-            "Ví dụ: /addmember 123456789 Nguyễn Văn A\n\n"
+            "Cú pháp: /themthanhvien <user_id> <Tên>\n"
+            "Ví dụ: /themthanhvien 123456789 Nguyễn Văn A\n\n"
             "Lấy user_id: nhờ thành viên nhắn tin cho @userinfobot"
         )
         return
@@ -1717,16 +2209,16 @@ async def cmd_addmember(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def cmd_paid(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     Xác nhận thành viên đã đóng tiền.
-    /paid <tên hoặc user_id> <số_tiền>
-    Ví dụ: /paid Nguyễn Văn A 150000
-            /paid 123456789 150000
+    /dathanhtoan <tên hoặc user_id> <số_tiền>
+    Ví dụ: /dathanhtoan Nguyễn Văn A 150000
+            /dathanhtoan 123456789 150000
     """
     if not is_admin(update.effective_user.id): return
     if len(context.args) < 2:
         await update.message.reply_text(
-            "Cú pháp: /paid <tên hoặc ID> <số_tiền>\n"
-            "Ví dụ: /paid Nguyễn Văn A 150000\n"
-            "        /paid 123456789 150000"
+            "Cú pháp: /dathanhtoan <tên hoặc ID> <số_tiền>\n"
+            "Ví dụ: /dathanhtoan Nguyễn Văn A 150000\n"
+            "        /dathanhtoan 123456789 150000"
         )
         return
     try:
@@ -1737,8 +2229,8 @@ async def cmd_paid(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not amount_str.isdigit():
             await update.message.reply_text(
                 "Số tiền phải là số nguyên ở cuối lệnh.\n"
-                "Ví dụ: /paid Văn A 150000\n"
-                "        /paid Trần Thị B 100000"
+                "Ví dụ: /dathanhtoan Văn A 150000\n"
+                "        /dathanhtoan Trần Thị B 100000"
             )
             return
         amount = int(amount_str)
@@ -1769,7 +2261,7 @@ async def cmd_paid(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await update.message.reply_text(
                     f"Tìm thấy {len(matches_found)} người tên gần giống:\n{names}\n\n"
                     "Dùng ID để xác nhận chính xác hơn:\n"
-                    f"/paid <ID> {amount}"
+                    f"/dathanhtoan <ID> {amount}"
                 )
                 return
             else:
@@ -1800,12 +2292,12 @@ async def cmd_paid(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def cmd_unpaid(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Xem danh sách chưa đóng đủ tiền. /unpaid"""
+    """Xem danh sách chưa đóng đủ tiền. /conno"""
     if not is_admin(update.effective_user.id): return
     data    = load_data()
     members = data.get("members", {})
     if not members:
-        await update.message.reply_text("Chưa có thành viên nào. Dùng /addmember để thêm.")
+        await update.message.reply_text("Chưa có thành viên nào. Dùng /themthanhvien để thêm.")
         return
 
     msg = "DANH SÁCH CHƯA ĐÓNG ĐỦ TIỀN\n" + "="*30 + "\n"
@@ -1827,7 +2319,7 @@ async def cmd_unpaid(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ============================================================
 
 async def cmd_excel(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Xuất file Excel tính tiền cho tất cả thành viên. /excel"""
+    """Xuất file Excel tính tiền cho tất cả thành viên. /xuatfile"""
     if not is_admin(update.effective_user.id): return
 
     data    = load_data()
@@ -1835,7 +2327,7 @@ async def cmd_excel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     matches = data.get("matches", {})
 
     if not members:
-        await update.message.reply_text("Chưa có thành viên nào. Dùng /addmember để thêm.")
+        await update.message.reply_text("Chưa có thành viên nào. Dùng /themthanhvien để thêm.")
         return
 
     await update.message.reply_text("Đang tạo file Excel...")
@@ -2032,36 +2524,42 @@ async def cmd_excel(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 def main():
     app = Application.builder().token(BOT_TOKEN).post_init(post_init).build()
-    app.add_handler(CommandHandler("newmatch",       cmd_newmatch))
-    app.add_handler(CommandHandler("fetchodds",      cmd_fetchodds))
-    app.add_handler(CommandHandler("autosetup",      cmd_autosetup))
-    app.add_handler(CommandHandler("sendpoll",       cmd_sendpoll))
-    app.add_handler(CommandHandler("lockpoll",       cmd_lockpoll))
-    app.add_handler(CommandHandler("result",         cmd_result))
-    app.add_handler(CommandHandler("fetchresult",    cmd_fetchresult))
-    app.add_handler(CommandHandler("paid",           cmd_paid))
-    app.add_handler(CommandHandler("unpaid",         cmd_unpaid))
-    app.add_handler(CommandHandler("rules",          cmd_rules))
-    app.add_handler(CommandHandler("myrules",        cmd_myrules))
-    app.add_handler(CommandHandler("join",           cmd_join))
-    app.add_handler(CommandHandler("members",        cmd_members))
-    app.add_handler(CommandHandler("removemember",   cmd_removemember))
-    app.add_handler(CommandHandler("addmember",      cmd_addmember))
-    app.add_handler(CommandHandler("excel",          cmd_excel))
-    app.add_handler(CommandHandler("editresult",     cmd_editresult))
-    app.add_handler(CommandHandler("editdebt",       cmd_editdebt))
-    app.add_handler(CommandHandler("editpaid",       cmd_editpaid))
-    app.add_handler(CommandHandler("viewmatch",      cmd_viewmatch))
-    app.add_handler(CommandHandler("listsports",     cmd_listsports))
-    app.add_handler(CommandHandler("clearmatches",   cmd_clearmatches))
-    app.add_handler(CommandHandler("testmode",       cmd_testmode))
-    app.add_handler(CommandHandler("resetforwc",     cmd_resetforwc))
-    app.add_handler(CommandHandler("resetdata",      cmd_resetdata))
-    app.add_handler(CommandHandler("syncdata",        cmd_syncdata))
-    app.add_handler(CommandHandler("standings",      cmd_standings))
-    app.add_handler(CommandHandler("matches",        cmd_matches))
-    app.add_handler(CommandHandler("mypredictions",  cmd_mypredictions))
-    app.add_handler(CommandHandler("help",           cmd_help))
+    app.add_handler(CommandHandler("themtran",       cmd_newmatch))
+    app.add_handler(CommandHandler("xemkeo",      cmd_fetchodds))
+    app.add_handler(CommandHandler("laykeo",      cmd_autosetup))
+    app.add_handler(CommandHandler("guibinhchon",       cmd_sendpoll))
+    app.add_handler(CommandHandler("khoabinhchon",       cmd_lockpoll))
+    app.add_handler(CommandHandler("ketqua",         cmd_result))
+    app.add_handler(CommandHandler("laykequa",    cmd_fetchresult))
+    app.add_handler(CommandHandler("dathanhtoan",           cmd_paid))
+    app.add_handler(CommandHandler("conno",         cmd_unpaid))
+    app.add_handler(CommandHandler("guithele",          cmd_rules))
+    app.add_handler(CommandHandler("thele",        cmd_myrules))
+    app.add_handler(CommandHandler("thamgia",           cmd_join))
+    app.add_handler(CommandHandler("danhsach",        cmd_members))
+    app.add_handler(CommandHandler("xoathanhvien",   cmd_removemember))
+    app.add_handler(CommandHandler("themthanhvien",      cmd_addmember))
+    app.add_handler(CommandHandler("xuatfile",          cmd_excel))
+    app.add_handler(CommandHandler("capnhatkeo",     cmd_updateodds))
+    app.add_handler(CommandHandler("xoatran",    cmd_deletematch))
+    app.add_handler(CommandHandler("suatran",      cmd_editmatch))
+    app.add_handler(CommandHandler("suakequa",     cmd_editresult))
+    app.add_handler(CommandHandler("suano",       cmd_editdebt))
+    app.add_handler(CommandHandler("suadathanhtoan",       cmd_editpaid))
+    app.add_handler(CommandHandler("xemtran",      cmd_viewmatch))
+    app.add_handler(CommandHandler("danhsachgiai",     cmd_listsports))
+    app.add_handler(CommandHandler("xoatrancu",   cmd_clearmatches))
+    app.add_handler(CommandHandler("chedo",       cmd_testmode))
+    app.add_handler(CommandHandler("resetwc",     cmd_resetforwc))
+    app.add_handler(CommandHandler("xoahetdata",      cmd_resetdata))
+    app.add_handler(CommandHandler("luudata",        cmd_syncdata))
+    app.add_handler(CommandHandler("bangno",      cmd_standings))
+    app.add_handler(CommandHandler("lichthidau",        cmd_matches))
+    app.add_handler(CommandHandler("lichsu",  cmd_mypredictions))
+    app.add_handler(CommandHandler("bieudo",         cmd_bieudo))
+    app.add_handler(CommandHandler("thongke",        cmd_thongke))
+    app.add_handler(CommandHandler("thongketoi",     cmd_mystat))
+    app.add_handler(CommandHandler("huongdan",           cmd_help))
     app.add_handler(PollAnswerHandler(handle_poll_answer))
     logger.info("Bot đang chạy...")
     app.run_polling(allowed_updates=Update.ALL_TYPES)
