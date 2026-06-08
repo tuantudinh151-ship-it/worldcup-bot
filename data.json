@@ -133,7 +133,7 @@
       "result": "home",
       "poll_id": "6138606008085251016",
       "poll_message_id": 38,
-      "locked": false
+      "locked": true
     },
     "TS079": {
       "home_team": "Phap",
