@@ -178,7 +178,7 @@
       "result": null,
       "poll_id": "6138606008085251044",
       "poll_message_id": 44,
-      "locked": false
+      "locked": true
     },
     "TS036": {
       "home_team": "Argentina",
