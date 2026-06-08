@@ -118,7 +118,7 @@
       "result": null,
       "poll_id": "6138606008085251014",
       "poll_message_id": 36,
-      "locked": false
+      "locked": true
     },
     "TS068": {
       "home_team": "Niger",
