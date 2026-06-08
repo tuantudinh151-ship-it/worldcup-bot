@@ -208,6 +208,12 @@
         "name": "Dinh Tu",
         "choice": "home"
       }
+    },
+    "TS068": {
+      "1216368366": {
+        "name": "Dinh Tu",
+        "choice": "away"
+      }
     }
   },
   "players": {
