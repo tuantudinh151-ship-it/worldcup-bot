@@ -148,7 +148,7 @@
       "result": null,
       "poll_id": "6138606008085251017",
       "poll_message_id": 40,
-      "locked": false
+      "locked": true
     },
     "TS053": {
       "home_team": "Peru",
