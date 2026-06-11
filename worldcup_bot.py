@@ -1824,62 +1824,64 @@ def _team_match(name1: str, name2: str) -> bool:
     b = _normalize_team(name2)
     return a in b or b in a or a == b
 
+def fetch_results_from_odds_api() -> dict:
+    """
+    Lấy kết quả trận đấu từ The Odds API scores endpoint (miễn phí).
+    Trả về dict: {(home_lower, away_lower): {"home_score", "away_score", "completed"}}
+    Lấy trận trong 3 ngày qua.
+    """
+    sport_key = get_sport_key()
+    results = {}
+    try:
+        r = requests.get(
+            f"https://api.the-odds-api.com/v4/sports/{sport_key}/scores",
+            params={"apiKey": ODDS_API_KEY, "daysFrom": 3, "dateFormat": "iso"},
+            timeout=15
+        )
+        if r.status_code != 200:
+            logger.error(f"Odds scores API lỗi: {r.status_code} {r.text[:150]}")
+            return results
+
+        for game in r.json():
+            if not game.get("completed"):
+                continue  # Chỉ lấy trận đã kết thúc
+            scores = game.get("scores")
+            if not scores:
+                continue
+            home = game["home_team"]
+            away = game["away_team"]
+            # scores là list [{"name": team, "score": "2"}, ...]
+            score_map = {s["name"]: s["score"] for s in scores}
+            if home not in score_map or away not in score_map:
+                continue
+            try:
+                hs = int(score_map[home])
+                as_ = int(score_map[away])
+            except (ValueError, TypeError):
+                continue
+            results[(home.lower(), away.lower())] = {
+                "home_team": home, "away_team": away,
+                "home_score": hs, "away_score": as_
+            }
+        logger.info(f"Odds scores API: {len(results)} trận đã kết thúc")
+    except Exception as e:
+        logger.error(f"fetch_results_from_odds_api lỗi: {e}")
+    return results
+
+
 def fetch_match_result_api(home_team: str, away_team: str, match_date: str) -> dict | None:
     """
-    Lấy kết quả trận đấu từ API-Football (league=1, season=2026).
-    Trả về {"home_score", "away_score"} hoặc None.
-    Lấy theo NGÀY rồi so khớp tên đội (đội nhà/khách có thể đảo).
+    Lấy kết quả 1 trận từ The Odds API (thay cho API-Football).
+    match_date không dùng nữa nhưng giữ để tương thích.
     """
-    if not APIFOOTBALL_KEY:
-        logger.warning("Chưa cấu hình APIFOOTBALL_KEY")
-        return None
-    try:
-        url = "https://v3.football.api-sports.io/fixtures"
-        headers = {"x-apisports-key": APIFOOTBALL_KEY}
-        # Lấy TẤT CẢ trận trong ngày (không lọc status để bắt cả FT/AET/PEN)
-        params  = {"league": "1", "season": "2026", "date": match_date}
-        r = requests.get(url, headers=headers, params=params, timeout=15)
-
-        if r.status_code != 200:
-            logger.error(f"API-Football HTTP {r.status_code}: {r.text[:150]}")
-            return None
-
-        body = r.json()
-        # API-Football trả lỗi trong field "errors"
-        if body.get("errors"):
-            logger.error(f"API-Football errors: {body['errors']}")
-            return None
-
-        fixtures = body.get("response", [])
-        logger.info(f"API-Football: {len(fixtures)} trận ngày {match_date}")
-
-        for fix in fixtures:
-            h = fix["teams"]["home"]["name"]
-            a = fix["teams"]["away"]["name"]
-            status = fix["fixture"]["status"]["short"]  # FT, AET, PEN, NS, ...
-
-            # So khớp 2 chiều (phòng trường hợp đảo sân)
-            match_direct  = _team_match(home_team, h) and _team_match(away_team, a)
-            match_swapped = _team_match(home_team, a) and _team_match(away_team, h)
-
-            if match_direct or match_swapped:
-                # Chỉ lấy khi trận đã kết thúc
-                if status not in ["FT", "AET", "PEN"]:
-                    logger.info(f"Trận {h} vs {a} chưa xong (status={status})")
-                    return None
-                goals = fix["goals"]
-                if goals["home"] is None or goals["away"] is None:
-                    return None
-                # Nếu bị đảo sân, đảo lại tỷ số cho đúng đội nhà của ta
-                if match_swapped and not match_direct:
-                    return {"home_score": goals["away"], "away_score": goals["home"]}
-                return {"home_score": goals["home"], "away_score": goals["away"]}
-
-        logger.warning(f"Không tìm thấy trận {home_team} vs {away_team} ngày {match_date}")
-        return None
-    except Exception as e:
-        logger.error(f"fetch_match_result_api lỗi: {e}")
-        return None
+    all_results = fetch_results_from_odds_api()
+    for (h, a), data in all_results.items():
+        if (_team_match(home_team, data["home_team"]) and _team_match(away_team, data["away_team"])):
+            return {"home_score": data["home_score"], "away_score": data["away_score"]}
+        # Thử đảo sân
+        if (_team_match(home_team, data["away_team"]) and _team_match(away_team, data["home_team"])):
+            return {"home_score": data["away_score"], "away_score": data["home_score"]}
+    return None
 
 
 def determine_keo_result(home_score: int, away_score: int, handicap: float) -> str:
@@ -1926,22 +1928,8 @@ async def auto_fetch_result_job(match_id: str, app):
     if m.get("result"):
         return  # Đã có kết quả rồi
 
-    if not APIFOOTBALL_KEY:
-        logger.warning(f"Không có APIFOOTBALL_KEY, bỏ qua auto fetch trận {match_id}")
-        return
-
-    # Test mode dùng giao hữu - API-Football league khác, không tự lấy được
-    if TEST_MODE:
-        logger.info(f"TEST MODE: bỏ qua auto fetch trận {match_id}, nhập thủ công bằng /ketqua")
-        try:
-            await app.bot.send_message(
-                chat_id=ADMIN_ID,
-                text=f"[TEST] Trận {match_id} đã kết thúc.\n"
-                     f"{m['home_team']} vs {m['away_team']}\n"
-                     f"Nhập kết quả thủ công: /ketqua {match_id} <home|draw|away>"
-            )
-        except Exception:
-            pass
+    if not ODDS_API_KEY:
+        logger.warning(f"Không có ODDS_API_KEY, bỏ qua auto fetch trận {match_id}")
         return
 
     kickoff    = datetime.fromisoformat(m["kickoff"])
@@ -2032,48 +2020,45 @@ async def cmd_testapi(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Cú pháp: /testapi <YYYY-MM-DD>\nVD: /testapi 2026-06-12")
         return
 
-    match_date = context.args[0]
-    if not APIFOOTBALL_KEY:
-        await update.message.reply_text("Chưa có APIFOOTBALL_KEY trong Variables!")
-        return
-
-    await update.message.reply_text(f"Đang kiểm tra API-Football ngày {match_date}...")
+    await update.message.reply_text("Đang kiểm tra The Odds API scores...")
     try:
-        url = "https://v3.football.api-sports.io/fixtures"
-        headers = {"x-apisports-key": APIFOOTBALL_KEY}
-        params  = {"league": "1", "season": "2026", "date": match_date}
-        r = requests.get(url, headers=headers, params=params, timeout=15)
+        sport_key = get_sport_key()
+        r = requests.get(
+            f"https://api.the-odds-api.com/v4/sports/{sport_key}/scores",
+            params={"apiKey": ODDS_API_KEY, "daysFrom": 3, "dateFormat": "iso"},
+            timeout=15
+        )
+        remaining = r.headers.get("x-requests-remaining", "?")
 
-        body = r.json()
-        # Kiểm tra quota
-        remaining = r.headers.get("x-ratelimit-requests-remaining", "?")
-
-        if body.get("errors"):
+        if r.status_code != 200:
             await update.message.reply_text(
-                f"API trả về LỖI:\n{body['errors']}\n\n"
-                f"Thường gặp: hết quota, sai key, hoặc plan free không hỗ trợ."
+                f"API lỗi HTTP {r.status_code}:\n{r.text[:200]}"
             )
             return
 
-        fixtures = body.get("response", [])
-        if not fixtures:
-            await update.message.reply_text(
-                f"API hoạt động nhưng KHÔNG có trận nào ngày {match_date}.\n"
-                f"Quota còn: {remaining}\n\n"
-                f"Có thể: ngày sai, hoặc plan free chưa có dữ liệu WC 2026."
-            )
-            return
+        games = r.json()
+        completed = [g for g in games if g.get("completed")]
+        live      = [g for g in games if not g.get("completed") and g.get("scores")]
 
-        msg = f"API OK! Có {len(fixtures)} trận ngày {match_date}:\n"
-        msg += f"Quota còn: {remaining}\n" + "="*28 + "\n"
-        for fix in fixtures[:8]:
-            h = fix["teams"]["home"]["name"]
-            a = fix["teams"]["away"]["name"]
-            status = fix["fixture"]["status"]["short"]
-            gh = fix["goals"]["home"]
-            ga = fix["goals"]["away"]
-            score = f"{gh}-{ga}" if gh is not None else "chưa đá"
+        msg = f"THE ODDS API - {sport_key}\n"
+        msg += f"Quota còn: {remaining}\n"
+        msg += f"Tổng: {len(games)} trận | Đã xong: {len(completed)} | Đang đá: {len(live)}\n"
+        msg += "="*28 + "\n"
+
+        for g in (completed + live)[:8]:
+            h = g["home_team"]
+            a = g["away_team"]
+            scores = g.get("scores")
+            if scores:
+                sm = {s["name"]: s["score"] for s in scores}
+                score = f"{sm.get(h,'?')}-{sm.get(a,'?')}"
+            else:
+                score = "chưa có"
+            status = "XONG" if g.get("completed") else "LIVE"
             msg += f"• {h} vs {a}: {score} ({status})\n"
+
+        if not completed and not live:
+            msg += "Chưa có trận nào kết thúc trong 3 ngày qua."
 
         await update.message.reply_text(msg)
     except Exception as e:
@@ -2087,8 +2072,8 @@ async def cmd_fetchresult(update: Update, context: ContextTypes.DEFAULT_TYPE):
     /laykequa
     """
     if not is_admin(update.effective_user.id): return
-    if not APIFOOTBALL_KEY:
-        await update.message.reply_text("Chưa có APIFOOTBALL_KEY trong file .env!")
+    if not ODDS_API_KEY:
+        await update.message.reply_text("Chưa có ODDS_API_KEY!")
         return
 
     await update.message.reply_text("Đang lấy kết quả từ API-Football...")
