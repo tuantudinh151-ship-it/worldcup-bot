@@ -1093,11 +1093,19 @@
     "1216368366": {
       "name": "Dinh Tu",
       "debt": 0
+    },
+    "1737600470": {
+      "name": "Maverick Mason",
+      "debt": 0
     }
   },
   "members": {
     "1216368366": {
       "name": "Dinh Tu",
+      "paid": 0
+    },
+    "1737600470": {
+      "name": "Maverick Mason",
       "paid": 0
     }
   }
