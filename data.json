@@ -13,7 +13,8 @@
       "result": null,
       "poll_id": "6147738616090067659",
       "poll_message_id": 82,
-      "locked": true
+      "locked": true,
+      "result_retry": 1
     },
     "WC003": {
       "home_team": "South Korea",
