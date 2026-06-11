@@ -10,11 +10,13 @@
       "away_odds": 1.87,
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
-      "result": null,
+      "result": "home",
       "poll_id": "6147738616090067659",
       "poll_message_id": 82,
       "locked": true,
-      "result_retry": 1
+      "result_retry": 1,
+      "home_score": 2,
+      "away_score": 0
     },
     "WC003": {
       "home_team": "South Korea",
@@ -1123,11 +1125,11 @@
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 0
+      "debt": 50000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
-      "debt": 0
+      "debt": 50000
     },
     "1142379559": {
       "name": "Duke",
