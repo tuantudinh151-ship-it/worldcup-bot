@@ -1097,6 +1097,10 @@
     "1737600470": {
       "name": "Maverick Mason",
       "debt": 0
+    },
+    "1631200826": {
+      "name": "LDD 🐾 🌱",
+      "debt": 0
     }
   },
   "members": {
@@ -1106,6 +1110,10 @@
     },
     "1737600470": {
       "name": "Maverick Mason",
+      "paid": 0
+    },
+    "1631200826": {
+      "name": "LDD 🐾 🌱",
       "paid": 0
     }
   }
