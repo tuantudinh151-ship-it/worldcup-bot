@@ -28,10 +28,12 @@
       "away_odds": 2.06,
       "bookmaker": "Pinnacle",
       "has_draw_option": true,
-      "result": null,
+      "result": "home",
       "poll_id": "6147738616090067672",
       "poll_message_id": 120,
-      "locked": true
+      "locked": true,
+      "home_score": 2,
+      "away_score": 1
     },
     "WC006": {
       "home_team": "Canada",
@@ -1131,7 +1133,7 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 0
+      "debt": 50000
     },
     "1737600470": {
       "name": "Maverick Mason",
@@ -1139,11 +1141,11 @@
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
-      "debt": 50000
+      "debt": 100000
     },
     "1142379559": {
       "name": "Duke",
-      "debt": 0
+      "debt": 50000
     }
   },
   "members": {
