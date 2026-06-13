@@ -45,10 +45,12 @@
       "away_odds": 2.1,
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
-      "result": null,
+      "result": "away",
       "poll_id": "6149990415903752655",
       "poll_message_id": 176,
-      "locked": true
+      "locked": true,
+      "home_score": 1,
+      "away_score": 1
     },
     "WC010": {
       "home_team": "USA",
@@ -1161,15 +1163,15 @@
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 50000
+      "debt": 100000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
-      "debt": 100000
+      "debt": 150000
     },
     "1142379559": {
       "name": "Duke",
-      "debt": 50000
+      "debt": 100000
     }
   },
   "members": {
