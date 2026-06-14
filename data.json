@@ -79,10 +79,12 @@
       "away_odds": 1.91,
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
-      "result": null,
+      "result": "home",
       "poll_id": "6151940683243455154",
       "poll_message_id": 198,
-      "locked": false
+      "locked": false,
+      "home_score": 1,
+      "away_score": 1
     },
     "WC021": {
       "home_team": "Brazil",
@@ -1219,19 +1221,19 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 50000
+      "debt": 100000
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 150000
+      "debt": 200000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
-      "debt": 150000
+      "debt": 200000
     },
     "1142379559": {
       "name": "Duke",
-      "debt": 150000
+      "debt": 200000
     }
   },
   "members": {
