@@ -113,10 +113,12 @@
       "away_odds": 1.94,
       "bookmaker": "Pinnacle",
       "has_draw_option": true,
-      "result": null,
+      "result": "draw",
       "poll_id": "6154192483057140891",
       "poll_message_id": 216,
-      "locked": false
+      "locked": false,
+      "home_score": 0,
+      "away_score": 1
     },
     "WC036": {
       "home_team": "Australia",
@@ -1223,19 +1225,19 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 150000
+      "debt": 200000
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 250000
+      "debt": 300000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
-      "debt": 250000
+      "debt": 300000
     },
     "1142379559": {
       "name": "Duke",
-      "debt": 250000
+      "debt": 300000
     }
   },
   "members": {
