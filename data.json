@@ -96,10 +96,12 @@
       "away_odds": 2.02,
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
-      "result": null,
+      "result": "away",
       "poll_id": "6154192483057140889",
       "poll_message_id": 207,
-      "locked": false
+      "locked": false,
+      "home_score": 1,
+      "away_score": 1
     },
     "WC028": {
       "home_team": "Haiti",
@@ -1221,19 +1223,19 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 100000
+      "debt": 150000
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 200000
+      "debt": 250000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
-      "debt": 200000
+      "debt": 250000
     },
     "1142379559": {
       "name": "Duke",
-      "debt": 200000
+      "debt": 250000
     }
   },
   "members": {
