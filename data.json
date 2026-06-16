@@ -198,10 +198,12 @@
       "away_odds": 1.94,
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
-      "result": null,
+      "result": "home",
       "poll_id": "6156740008549024371",
       "poll_message_id": 238,
-      "locked": false
+      "locked": false,
+      "home_score": 5,
+      "away_score": 1
     },
     "WC091": {
       "home_team": "Spain",
@@ -1325,11 +1327,11 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 250000
+      "debt": 300000
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 500000
+      "debt": 550000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
