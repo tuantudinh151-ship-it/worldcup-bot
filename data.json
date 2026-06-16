@@ -249,10 +249,12 @@
       "away_odds": 2.05,
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
-      "result": null,
+      "result": "home",
       "poll_id": "6158991808362709655",
       "poll_message_id": 254,
-      "locked": false
+      "locked": false,
+      "home_score": 1,
+      "away_score": 1
     },
     "WC136": {
       "home_team": "Iran",
@@ -1331,15 +1333,15 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 350000
+      "debt": 400000
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 650000
+      "debt": 700000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
-      "debt": 550000
+      "debt": 600000
     },
     "1142379559": {
       "name": "Duke",
