@@ -181,10 +181,12 @@
       "away_odds": 2.18,
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
-      "result": null,
+      "result": "home",
       "poll_id": "6156740008549024368",
       "poll_message_id": 233,
-      "locked": false
+      "locked": false,
+      "home_score": 1,
+      "away_score": 0
     },
     "WC078": {
       "home_team": "Sweden",
@@ -1327,15 +1329,15 @@
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 450000
+      "debt": 500000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
-      "debt": 400000
+      "debt": 450000
     },
     "1142379559": {
       "name": "Duke",
-      "debt": 300000
+      "debt": 350000
     }
   },
   "members": {
