@@ -147,10 +147,12 @@
       "away_odds": 1.91,
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
-      "result": null,
+      "result": "home",
       "poll_id": "6156740008549024364",
       "poll_message_id": 225,
-      "locked": false
+      "locked": false,
+      "home_score": 7,
+      "away_score": 1
     },
     "WC055": {
       "home_team": "Netherlands",
@@ -1323,7 +1325,7 @@
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 350000
+      "debt": 400000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
