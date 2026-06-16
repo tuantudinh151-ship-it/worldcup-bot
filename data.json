@@ -164,10 +164,12 @@
       "away_odds": 1.85,
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
-      "result": null,
+      "result": "away",
       "poll_id": "6156740008549024366",
       "poll_message_id": 228,
-      "locked": false
+      "locked": false,
+      "home_score": 2,
+      "away_score": 2
     },
     "WC066": {
       "home_team": "Ivory Coast",
@@ -1325,11 +1327,11 @@
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 400000
+      "debt": 450000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
-      "debt": 350000
+      "debt": 400000
     },
     "1142379559": {
       "name": "Duke",
