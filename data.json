@@ -232,10 +232,12 @@
       "away_odds": 2.11,
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
-      "result": null,
+      "result": "away",
       "poll_id": "6158991808362709653",
       "poll_message_id": 249,
-      "locked": false
+      "locked": false,
+      "home_score": 1,
+      "away_score": 1
     },
     "WC120": {
       "home_team": "Saudi Arabia",
@@ -1329,19 +1331,19 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 300000
+      "debt": 350000
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 600000
+      "debt": 650000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
-      "debt": 500000
+      "debt": 550000
     },
     "1142379559": {
       "name": "Duke",
-      "debt": 400000
+      "debt": 450000
     }
   },
   "members": {
