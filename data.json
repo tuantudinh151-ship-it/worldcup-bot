@@ -215,10 +215,12 @@
       "away_odds": 1.91,
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
-      "result": null,
+      "result": "away",
       "poll_id": "6158991808362709652",
       "poll_message_id": 246,
-      "locked": false
+      "locked": false,
+      "home_score": 0,
+      "away_score": 0
     },
     "WC105": {
       "home_team": "Belgium",
@@ -1331,15 +1333,15 @@
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 550000
+      "debt": 600000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
-      "debt": 450000
+      "debt": 500000
     },
     "1142379559": {
       "name": "Duke",
-      "debt": 350000
+      "debt": 400000
     }
   },
   "members": {
