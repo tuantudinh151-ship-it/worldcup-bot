@@ -317,10 +317,12 @@
       "away_odds": 1.97,
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
-      "result": null,
+      "result": "home",
       "poll_id": "6163339857159521116",
       "poll_message_id": 282,
-      "locked": false
+      "locked": false,
+      "home_score": 3,
+      "away_score": 0
     },
     "WC210": {
       "home_team": "Austria",
@@ -1401,11 +1403,11 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 550000
+      "debt": 600000
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 850000
+      "debt": 900000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
