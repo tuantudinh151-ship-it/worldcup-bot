@@ -300,10 +300,12 @@
       "away_odds": 2.03,
       "bookmaker": "Pinnacle",
       "has_draw_option": true,
-      "result": null,
+      "result": "away",
       "poll_id": "6163339857159521097",
       "poll_message_id": 280,
-      "locked": false
+      "locked": false,
+      "home_score": 1,
+      "away_score": 4
     },
     "WC190": {
       "home_team": "Argentina",
@@ -1399,11 +1401,11 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 500000
+      "debt": 550000
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 800000
+      "debt": 850000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
@@ -1411,7 +1413,7 @@
     },
     "1142379559": {
       "name": "Duke",
-      "debt": 550000
+      "debt": 600000
     }
   },
   "members": {
