@@ -1400,6 +1400,12 @@
         "name": "Duke",
         "choice": "away"
       }
+    },
+    "WC300": {
+      "1216368366": {
+        "name": "Dinh Tu",
+        "choice": "home"
+      }
     }
   },
   "players": {
