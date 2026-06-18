@@ -368,10 +368,12 @@
       "away_odds": 1.95,
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
-      "result": null,
+      "result": "home",
       "poll_id": "6165713780073301219",
       "poll_message_id": 292,
-      "locked": false
+      "locked": false,
+      "home_score": 4,
+      "away_score": 2
     },
     "WC276": {
       "home_team": "Ghana",
@@ -1471,7 +1473,7 @@
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 1000000
+      "debt": 1050000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
@@ -1479,7 +1481,7 @@
     },
     "1142379559": {
       "name": "Duke",
-      "debt": 700000
+      "debt": 750000
     }
   },
   "members": {
