@@ -385,10 +385,12 @@
       "away_odds": 1.88,
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
-      "result": null,
+      "result": "home",
       "poll_id": "6165713780073301243",
       "poll_message_id": 295,
-      "locked": false
+      "locked": false,
+      "home_score": 1,
+      "away_score": 0
     },
     "WC300": {
       "home_team": "Uzbekistan",
@@ -1469,11 +1471,11 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 700000
+      "debt": 750000
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 1050000
+      "debt": 1100000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
