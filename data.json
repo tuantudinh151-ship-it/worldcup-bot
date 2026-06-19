@@ -470,10 +470,12 @@
       "away_odds": 1.86,
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
-      "result": null,
+      "result": "home",
       "poll_id": "6167965579886986030",
       "poll_message_id": 332,
-      "locked": false
+      "locked": false,
+      "home_score": 1,
+      "away_score": 0
     },
     "WC435": {
       "home_team": "USA",
@@ -1515,11 +1517,11 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 950000
+      "debt": 1000000
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 1300000
+      "debt": 1350000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
@@ -1527,7 +1529,7 @@
     },
     "1142379559": {
       "name": "Duke",
-      "debt": 850000
+      "debt": 900000
     }
   },
   "members": {
