@@ -453,10 +453,12 @@
       "away_odds": 2.03,
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
-      "result": null,
+      "result": "home",
       "poll_id": "6167965579886986015",
       "poll_message_id": 328,
-      "locked": false
+      "locked": false,
+      "home_score": 6,
+      "away_score": 0
     },
     "WC406": {
       "home_team": "Mexico",
@@ -1487,15 +1489,15 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 900000
+      "debt": 950000
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 1250000
+      "debt": 1300000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
-      "debt": 900000
+      "debt": 950000
     },
     "1142379559": {
       "name": "Duke",
