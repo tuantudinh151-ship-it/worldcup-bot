@@ -1504,6 +1504,12 @@
         "name": "Duke",
         "choice": "away"
       }
+    },
+    "WC496": {
+      "1142379559": {
+        "name": "Duke",
+        "choice": "home"
+      }
     }
   },
   "players": {
