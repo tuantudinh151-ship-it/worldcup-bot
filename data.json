@@ -419,10 +419,12 @@
       "away_odds": 1.99,
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
-      "result": null,
+      "result": "away",
       "poll_id": "6167965579886985986",
       "poll_message_id": 320,
-      "locked": false
+      "locked": false,
+      "home_score": 1,
+      "away_score": 1
     },
     "WC351": {
       "home_team": "Switzerland",
@@ -1483,19 +1485,19 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 800000
+      "debt": 850000
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 1150000
+      "debt": 1200000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
-      "debt": 800000
+      "debt": 850000
     },
     "1142379559": {
       "name": "Duke",
-      "debt": 750000
+      "debt": 800000
     }
   },
   "members": {
