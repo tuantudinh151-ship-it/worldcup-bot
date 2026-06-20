@@ -1532,6 +1532,12 @@
         "name": "Duke",
         "choice": "home"
       }
+    },
+    "WC595": {
+      "1142379559": {
+        "name": "Duke",
+        "choice": "draw"
+      }
     }
   },
   "players": {
