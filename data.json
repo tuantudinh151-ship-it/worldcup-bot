@@ -640,10 +640,12 @@
       "away_odds": 1.9,
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
-      "result": null,
+      "result": "away",
       "poll_id": "6176903462664537119",
       "poll_message_id": 382,
-      "locked": false
+      "locked": false,
+      "home_score": 0,
+      "away_score": 0
     },
     "WC780": {
       "home_team": "Uruguay",
@@ -1627,19 +1629,19 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 1450000
+      "debt": 1500000
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 1800000
+      "debt": 1850000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
-      "debt": 1150000
+      "debt": 1200000
     },
     "1142379559": {
       "name": "Duke",
-      "debt": 1150000
+      "debt": 1200000
     }
   },
   "members": {
