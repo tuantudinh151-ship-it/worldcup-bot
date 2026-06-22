@@ -572,10 +572,12 @@
       "away_odds": 2.02,
       "bookmaker": "Pinnacle",
       "has_draw_option": true,
-      "result": null,
+      "result": "draw",
       "poll_id": "6174651662850851505",
       "poll_message_id": 369,
-      "locked": false
+      "locked": false,
+      "home_score": 2,
+      "away_score": 1
     },
     "WC630": {
       "home_team": "Ecuador",
@@ -587,10 +589,12 @@
       "away_odds": 1.88,
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
-      "result": null,
+      "result": "away",
       "poll_id": "6174651662850851522",
       "poll_message_id": 372,
-      "locked": false
+      "locked": false,
+      "home_score": 0,
+      "away_score": 0
     },
     "WC666": {
       "home_team": "Tunisia",
@@ -602,10 +606,12 @@
       "away_odds": 2.07,
       "bookmaker": "Pinnacle",
       "has_draw_option": true,
-      "result": null,
+      "result": "away",
       "poll_id": "6174651662850851586",
       "poll_message_id": 374,
-      "locked": false
+      "locked": false,
+      "home_score": 0,
+      "away_score": 4
     },
     "WC703": {
       "home_team": "Spain",
@@ -1619,19 +1625,19 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 1250000
+      "debt": 1400000
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 1600000
+      "debt": 1750000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
-      "debt": 1100000
+      "debt": 1150000
     },
     "1142379559": {
       "name": "Duke",
-      "debt": 1050000
+      "debt": 1150000
     }
   },
   "members": {
