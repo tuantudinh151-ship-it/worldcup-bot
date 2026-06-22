@@ -555,10 +555,12 @@
       "away_odds": 1.98,
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
-      "result": null,
+      "result": "home",
       "poll_id": "6174651662850851490",
       "poll_message_id": 366,
-      "locked": false
+      "locked": false,
+      "home_score": 5,
+      "away_score": 1
     },
     "WC595": {
       "home_team": "Germany",
@@ -1617,15 +1619,15 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 1200000
+      "debt": 1250000
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 1550000
+      "debt": 1600000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
-      "debt": 1050000
+      "debt": 1100000
     },
     "1142379559": {
       "name": "Duke",
