@@ -623,10 +623,12 @@
       "away_odds": 2.05,
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
-      "result": null,
+      "result": "home",
       "poll_id": "6176903462664537112",
       "poll_message_id": 380,
-      "locked": false
+      "locked": false,
+      "home_score": 4,
+      "away_score": 0
     },
     "WC741": {
       "home_team": "Belgium",
@@ -1625,11 +1627,11 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 1400000
+      "debt": 1450000
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 1750000
+      "debt": 1800000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
