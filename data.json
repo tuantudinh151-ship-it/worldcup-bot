@@ -487,10 +487,12 @@
       "away_odds": 1.85,
       "bookmaker": "Pinnacle",
       "has_draw_option": true,
-      "result": null,
+      "result": "home",
       "poll_id": "6170244017087841106",
       "poll_message_id": 347,
-      "locked": false
+      "locked": false,
+      "home_score": 2,
+      "away_score": 0
     },
     "WC465": {
       "home_team": "Scotland",
@@ -1609,19 +1611,19 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 1000000
+      "debt": 1050000
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 1350000
+      "debt": 1400000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
-      "debt": 950000
+      "debt": 1000000
     },
     "1142379559": {
       "name": "Duke",
-      "debt": 900000
+      "debt": 950000
     }
   },
   "members": {
