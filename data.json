@@ -820,8 +820,8 @@
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
       "result": null,
-      "poll_id": "6185760544222348171",
-      "poll_message_id": 437,
+      "poll_id": null,
+      "poll_message_id": null,
       "locked": false
     },
     "WC1275": {
@@ -835,8 +835,8 @@
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
       "result": null,
-      "poll_id": null,
-      "poll_message_id": null,
+      "poll_id": "6185760544222348172",
+      "poll_message_id": 438,
       "locked": false
     },
     "WC1326": {
