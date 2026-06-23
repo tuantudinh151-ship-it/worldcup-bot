@@ -742,10 +742,12 @@
       "away_odds": 1.97,
       "bookmaker": "Pinnacle",
       "has_draw_option": true,
-      "result": null,
+      "result": "draw",
       "poll_id": "6181672624414786284",
       "poll_message_id": 402,
-      "locked": false
+      "locked": false,
+      "home_score": 1,
+      "away_score": 2
     },
     "WC1035": {
       "home_team": "Portugal",
@@ -1675,11 +1677,11 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 1750000
+      "debt": 1800000
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 2100000
+      "debt": 2150000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
@@ -1687,7 +1689,7 @@
     },
     "1142379559": {
       "name": "Duke",
-      "debt": 1450000
+      "debt": 1500000
     }
   },
   "members": {
