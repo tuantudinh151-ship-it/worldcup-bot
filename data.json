@@ -725,10 +725,12 @@
       "away_odds": 2.02,
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
-      "result": null,
+      "result": "home",
       "poll_id": "6181672624414786281",
       "poll_message_id": 400,
-      "locked": false
+      "locked": false,
+      "home_score": 3,
+      "away_score": 2
     },
     "WC990": {
       "home_team": "Jordan",
@@ -1673,11 +1675,11 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 1700000
+      "debt": 1750000
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 2050000
+      "debt": 2100000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
@@ -1685,7 +1687,7 @@
     },
     "1142379559": {
       "name": "Duke",
-      "debt": 1400000
+      "debt": 1450000
     }
   },
   "members": {
