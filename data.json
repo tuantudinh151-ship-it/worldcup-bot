@@ -793,10 +793,12 @@
       "away_odds": 2.09,
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
-      "result": null,
+      "result": "home",
       "poll_id": "6183508744408662655",
       "poll_message_id": 426,
-      "locked": false
+      "locked": false,
+      "home_score": 0,
+      "away_score": 1
     },
     "WC1176": {
       "home_team": "Colombia",
@@ -1699,19 +1701,19 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 1900000
+      "debt": 1950000
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 2250000
+      "debt": 2300000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
-      "debt": 1300000
+      "debt": 1350000
     },
     "1142379559": {
       "name": "Duke",
-      "debt": 1600000
+      "debt": 1650000
     }
   },
   "members": {
