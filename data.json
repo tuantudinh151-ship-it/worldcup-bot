@@ -810,10 +810,12 @@
       "away_odds": 1.89,
       "bookmaker": "Pinnacle",
       "has_draw_option": true,
-      "result": null,
+      "result": "draw",
       "poll_id": "6183508744408662658",
       "poll_message_id": 432,
-      "locked": false
+      "locked": false,
+      "home_score": 1,
+      "away_score": 0
     },
     "WC1225": {
       "home_team": "Bosnia & Herzegovina",
@@ -1739,19 +1741,19 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 1950000
+      "debt": 2000000
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 2300000
+      "debt": 2350000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
-      "debt": 1350000
+      "debt": 1400000
     },
     "1142379559": {
       "name": "Duke",
-      "debt": 1650000
+      "debt": 1700000
     }
   },
   "members": {
