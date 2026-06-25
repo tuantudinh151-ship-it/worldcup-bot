@@ -895,10 +895,12 @@
       "away_odds": 1.95,
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
-      "result": null,
+      "result": "away",
       "poll_id": null,
       "poll_message_id": null,
-      "locked": false
+      "locked": false,
+      "home_score": 0,
+      "away_score": 3
     },
     "WC1485": {
       "home_team": "South Africa",
@@ -1749,19 +1751,19 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 2100000
+      "debt": 2150000
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 2550000
+      "debt": 2600000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
-      "debt": 1550000
+      "debt": 1600000
     },
     "1142379559": {
       "name": "Duke",
-      "debt": 1900000
+      "debt": 1950000
     }
   },
   "members": {
