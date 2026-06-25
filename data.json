@@ -912,10 +912,12 @@
       "away_odds": 1.89,
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
-      "result": null,
+      "result": "home",
       "poll_id": "6188012344036033226",
       "poll_message_id": 452,
-      "locked": false
+      "locked": false,
+      "home_score": 1,
+      "away_score": 0
     },
     "WC1540": {
       "home_team": "Curaçao",
@@ -1755,15 +1757,15 @@
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 2600000
+      "debt": 2650000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
-      "debt": 1600000
+      "debt": 1650000
     },
     "1142379559": {
       "name": "Duke",
-      "debt": 1950000
+      "debt": 2000000
     }
   },
   "members": {
