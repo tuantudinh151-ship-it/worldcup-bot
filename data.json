@@ -878,10 +878,12 @@
       "away_odds": 1.91,
       "bookmaker": "Pinnacle",
       "has_draw_option": true,
-      "result": null,
+      "result": "draw",
       "poll_id": null,
       "poll_message_id": null,
-      "locked": false
+      "locked": false,
+      "home_score": 4,
+      "away_score": 2
     },
     "WC1431": {
       "home_team": "Czech Republic",
@@ -1747,19 +1749,19 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 2050000
+      "debt": 2100000
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 2500000
+      "debt": 2550000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
-      "debt": 1500000
+      "debt": 1550000
     },
     "1142379559": {
       "name": "Duke",
-      "debt": 1850000
+      "debt": 1900000
     }
   },
   "members": {
