@@ -861,10 +861,12 @@
       "away_odds": 2.07,
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
-      "result": null,
+      "result": "away",
       "poll_id": "6188012344036033219",
       "poll_message_id": 443,
-      "locked": false
+      "locked": false,
+      "home_score": 0,
+      "away_score": 3
     },
     "WC1378": {
       "home_team": "Morocco",
@@ -1749,7 +1751,7 @@
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 2450000
+      "debt": 2500000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
@@ -1757,7 +1759,7 @@
     },
     "1142379559": {
       "name": "Duke",
-      "debt": 1800000
+      "debt": 1850000
     }
   },
   "members": {
