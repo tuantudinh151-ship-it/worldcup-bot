@@ -844,10 +844,12 @@
       "away_odds": 1.88,
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
-      "result": null,
+      "result": "home",
       "poll_id": "6185760544222348172",
       "poll_message_id": 438,
-      "locked": false
+      "locked": false,
+      "home_score": 2,
+      "away_score": 1
     },
     "WC1326": {
       "home_team": "Scotland",
@@ -1747,15 +1749,15 @@
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 2400000
+      "debt": 2450000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
-      "debt": 1450000
+      "debt": 1500000
     },
     "1142379559": {
       "name": "Duke",
-      "debt": 1750000
+      "debt": 1800000
     }
   },
   "members": {
