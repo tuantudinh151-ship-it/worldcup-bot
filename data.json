@@ -980,10 +980,12 @@
       "away_odds": 1.93,
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
-      "result": null,
+      "result": "home",
       "poll_id": null,
       "poll_message_id": null,
-      "locked": false
+      "locked": false,
+      "home_score": 1,
+      "away_score": 3
     },
     "WC1770": {
       "home_team": "Paraguay",
@@ -1777,19 +1779,19 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 2300000
+      "debt": 2350000
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 2800000
+      "debt": 2850000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
-      "debt": 1750000
+      "debt": 1800000
     },
     "1142379559": {
       "name": "Duke",
-      "debt": 2150000
+      "debt": 2200000
     }
   },
   "members": {
