@@ -997,10 +997,12 @@
       "away_odds": 1.68,
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
-      "result": null,
+      "result": "away",
       "poll_id": null,
       "poll_message_id": null,
-      "locked": false
+      "locked": false,
+      "home_score": 0,
+      "away_score": 0
     },
     "WC1830": {
       "home_team": "Turkey",
@@ -1779,19 +1781,19 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 2350000
+      "debt": 2400000
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 2850000
+      "debt": 2900000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
-      "debt": 1800000
+      "debt": 1850000
     },
     "1142379559": {
       "name": "Duke",
-      "debt": 2200000
+      "debt": 2250000
     }
   },
   "members": {
