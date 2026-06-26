@@ -1014,10 +1014,12 @@
       "away_odds": 1.85,
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
-      "result": null,
+      "result": "home",
       "poll_id": "6190682396354937594",
       "poll_message_id": 477,
-      "locked": false
+      "locked": false,
+      "home_score": 3,
+      "away_score": 2
     },
     "WC1891": {
       "home_team": "Norway",
@@ -1781,19 +1783,19 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 2400000
+      "debt": 2450000
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 2900000
+      "debt": 2950000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
-      "debt": 1850000
+      "debt": 1900000
     },
     "1142379559": {
       "name": "Duke",
-      "debt": 2250000
+      "debt": 2300000
     }
   },
   "members": {
