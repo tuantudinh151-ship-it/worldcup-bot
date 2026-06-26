@@ -946,10 +946,12 @@
       "away_odds": 1.89,
       "bookmaker": "Pinnacle",
       "has_draw_option": true,
-      "result": null,
+      "result": "home",
       "poll_id": null,
       "poll_message_id": null,
-      "locked": false
+      "locked": false,
+      "home_score": 2,
+      "away_score": 1
     },
     "WC1653": {
       "home_team": "Japan",
@@ -1773,19 +1775,19 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 2200000
+      "debt": 2250000
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 2700000
+      "debt": 2750000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
-      "debt": 1650000
+      "debt": 1700000
     },
     "1142379559": {
       "name": "Duke",
-      "debt": 2050000
+      "debt": 2100000
     }
   },
   "members": {
