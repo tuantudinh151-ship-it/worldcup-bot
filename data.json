@@ -963,10 +963,12 @@
       "away_odds": 2.04,
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
-      "result": null,
+      "result": "away",
       "poll_id": "6190682396354937586",
       "poll_message_id": 466,
-      "locked": false
+      "locked": false,
+      "home_score": 1,
+      "away_score": 1
     },
     "WC1711": {
       "home_team": "Tunisia",
@@ -1775,19 +1777,19 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 2250000
+      "debt": 2300000
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 2750000
+      "debt": 2800000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
-      "debt": 1700000
+      "debt": 1750000
     },
     "1142379559": {
       "name": "Duke",
-      "debt": 2100000
+      "debt": 2150000
     }
   },
   "members": {
