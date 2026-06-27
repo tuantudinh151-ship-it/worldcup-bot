@@ -1099,10 +1099,12 @@
       "away_odds": 1.93,
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
-      "result": null,
+      "result": "away",
       "poll_id": "6192953300183155340",
       "poll_message_id": 503,
-      "locked": false
+      "locked": false,
+      "home_score": 1,
+      "away_score": 5
     },
     "WC2211": {
       "home_team": "Egypt",
@@ -1807,15 +1809,15 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 2650000
+      "debt": 2700000
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 3150000
+      "debt": 3200000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
-      "debt": 2050000
+      "debt": 2100000
     },
     "1142379559": {
       "name": "Duke",
