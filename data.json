@@ -1116,10 +1116,12 @@
       "away_odds": 1.84,
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
-      "result": null,
+      "result": "away",
       "poll_id": null,
       "poll_message_id": null,
-      "locked": false
+      "locked": false,
+      "home_score": 1,
+      "away_score": 1
     },
     "WC2278": {
       "home_team": "Croatia",
@@ -1809,19 +1811,19 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 2700000
+      "debt": 2750000
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 3200000
+      "debt": 3250000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
-      "debt": 2100000
+      "debt": 2150000
     },
     "1142379559": {
       "name": "Duke",
-      "debt": 2500000
+      "debt": 2550000
     }
   },
   "members": {
