@@ -1048,10 +1048,12 @@
       "away_odds": 2.02,
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
-      "result": null,
+      "result": "home",
       "poll_id": "6192953300183155315",
       "poll_message_id": 485,
-      "locked": false
+      "locked": false,
+      "home_score": 5,
+      "away_score": 0
     },
     "WC2016": {
       "home_team": "Cape Verde",
@@ -1801,19 +1803,19 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 2500000
+      "debt": 2550000
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 3000000
+      "debt": 3050000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
-      "debt": 1950000
+      "debt": 2000000
     },
     "1142379559": {
       "name": "Duke",
-      "debt": 2350000
+      "debt": 2400000
     }
   },
   "members": {
