@@ -1031,10 +1031,12 @@
       "away_odds": 2.05,
       "bookmaker": "Pinnacle",
       "has_draw_option": true,
-      "result": null,
+      "result": "away",
       "poll_id": null,
       "poll_message_id": null,
-      "locked": false
+      "locked": false,
+      "home_score": 1,
+      "away_score": 4
     },
     "WC1953": {
       "home_team": "Senegal",
@@ -1799,19 +1801,19 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 2450000
+      "debt": 2500000
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 2950000
+      "debt": 3000000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
-      "debt": 1900000
+      "debt": 1950000
     },
     "1142379559": {
       "name": "Duke",
-      "debt": 2300000
+      "debt": 2350000
     }
   },
   "members": {
