@@ -1122,8 +1122,8 @@
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
       "result": null,
-      "poll_id": "6195205099996841183",
-      "poll_message_id": 510,
+      "poll_id": null,
+      "poll_message_id": null,
       "locked": false
     },
     "WC2346": {
@@ -1137,8 +1137,8 @@
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
       "result": null,
-      "poll_id": null,
-      "poll_message_id": null,
+      "poll_id": "6195205099996841184",
+      "poll_message_id": 511,
       "locked": false
     },
     "WC2415": {
@@ -1783,6 +1783,10 @@
       "1631200826": {
         "name": "LDD 🐾 🌱",
         "choice": "home"
+      },
+      "1142379559": {
+        "name": "Duke",
+        "choice": "away"
       }
     }
   },
