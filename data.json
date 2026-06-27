@@ -1082,10 +1082,12 @@
       "away_odds": 1.93,
       "bookmaker": "Pinnacle",
       "has_draw_option": true,
-      "result": null,
+      "result": "draw",
       "poll_id": "6192953300183155332",
       "poll_message_id": 491,
-      "locked": false
+      "locked": false,
+      "home_score": 0,
+      "away_score": 1
     },
     "WC2145": {
       "home_team": "New Zealand",
@@ -1805,11 +1807,11 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 2600000
+      "debt": 2650000
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 3100000
+      "debt": 3150000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
@@ -1817,7 +1819,7 @@
     },
     "1142379559": {
       "name": "Duke",
-      "debt": 2450000
+      "debt": 2500000
     }
   },
   "members": {
