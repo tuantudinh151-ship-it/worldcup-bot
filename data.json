@@ -1184,10 +1184,12 @@
       "away_odds": 2.07,
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
-      "result": null,
+      "result": "home",
       "poll_id": null,
       "poll_message_id": null,
-      "locked": false
+      "locked": false,
+      "home_score": 3,
+      "away_score": 1
     },
     "WC2556": {
       "home_team": "Algeria",
@@ -1199,10 +1201,12 @@
       "away_odds": 2.24,
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
-      "result": null,
+      "result": "home",
       "poll_id": null,
       "poll_message_id": null,
-      "locked": false
+      "locked": false,
+      "home_score": 3,
+      "away_score": 3
     },
     "WC2628": {
       "home_team": "Jordan",
@@ -2069,19 +2073,19 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 3050000
+      "debt": 3250000
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 3550000
+      "debt": 3750000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
-      "debt": 2250000
+      "debt": 2450000
     },
     "1142379559": {
       "name": "Duke",
-      "debt": 2850000
+      "debt": 3050000
     }
   },
   "members": {
