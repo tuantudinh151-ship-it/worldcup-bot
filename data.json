@@ -1238,7 +1238,7 @@
       "result": null,
       "poll_id": "6197269703660929499",
       "poll_message_id": 536,
-      "locked": false
+      "locked": true
     },
     "WC2631": {
       "home_team": "Brazil",
