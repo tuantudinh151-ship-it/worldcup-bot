@@ -1133,10 +1133,12 @@
       "away_odds": 2.02,
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
-      "result": null,
+      "result": "home",
       "poll_id": null,
       "poll_message_id": null,
-      "locked": false
+      "locked": false,
+      "home_score": 2,
+      "away_score": 1
     },
     "WC2346": {
       "home_team": "Panama",
@@ -2063,19 +2065,19 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 2750000
+      "debt": 2850000
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 3250000
+      "debt": 3350000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
-      "debt": 2150000
+      "debt": 2250000
     },
     "1142379559": {
       "name": "Duke",
-      "debt": 2550000
+      "debt": 2650000
     }
   },
   "members": {
