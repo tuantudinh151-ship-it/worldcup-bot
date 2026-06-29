@@ -1253,7 +1253,7 @@
       "result": null,
       "poll_id": "6201773303288300434",
       "poll_message_id": 547,
-      "locked": false
+      "locked": true
     },
     "WC2634": {
       "home_team": "Germany",
