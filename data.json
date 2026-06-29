@@ -1268,7 +1268,7 @@
       "result": null,
       "poll_id": "6201529220296868468",
       "poll_message_id": 549,
-      "locked": false
+      "locked": true
     },
     "WC2638": {
       "home_team": "Netherlands",
