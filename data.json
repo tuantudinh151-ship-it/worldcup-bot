@@ -1269,10 +1269,12 @@
       "away_odds": 2.07,
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
-      "result": null,
+      "result": "away",
       "poll_id": "6201529220296868468",
       "poll_message_id": 549,
-      "locked": true
+      "locked": true,
+      "home_score": 1,
+      "away_score": 1
     },
     "WC2638": {
       "home_team": "Netherlands",
@@ -2109,11 +2111,11 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 3550000
+      "debt": 3650000
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 4050000
+      "debt": 4150000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
@@ -2121,7 +2123,7 @@
     },
     "1142379559": {
       "name": "Duke",
-      "debt": 3350000
+      "debt": 3450000
     }
   },
   "members": {
