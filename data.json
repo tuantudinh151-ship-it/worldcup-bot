@@ -1306,7 +1306,7 @@
       "result": null,
       "poll_id": "6203781020110553620",
       "poll_message_id": 555,
-      "locked": false
+      "locked": true
     },
     "WC2649": {
       "home_team": "France",
