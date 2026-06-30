@@ -1286,10 +1286,12 @@
       "away_odds": 2.05,
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
-      "result": null,
+      "result": "away",
       "poll_id": "6201529220296868481",
       "poll_message_id": 551,
-      "locked": true
+      "locked": true,
+      "home_score": 1,
+      "away_score": 1
     },
     "WC2643": {
       "home_team": "Ivory Coast",
@@ -2111,19 +2113,19 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 3650000
+      "debt": 3750000
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 4150000
+      "debt": 4250000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
-      "debt": 2550000
+      "debt": 2650000
     },
     "1142379559": {
       "name": "Duke",
-      "debt": 3450000
+      "debt": 3550000
     }
   },
   "members": {
