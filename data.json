@@ -1382,10 +1382,12 @@
       "away_odds": 2.03,
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
-      "result": null,
+      "result": "home",
       "poll_id": "6203781020110553629",
       "poll_message_id": 564,
-      "locked": true
+      "locked": true,
+      "home_score": 2,
+      "away_score": 0
     },
     "WC2676": {
       "home_team": "England",
@@ -2141,11 +2143,11 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 3950000
+      "debt": 4050000
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 4450000
+      "debt": 4550000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
@@ -2153,7 +2155,7 @@
     },
     "1142379559": {
       "name": "Duke",
-      "debt": 3750000
+      "debt": 3850000
     }
   },
   "members": {
