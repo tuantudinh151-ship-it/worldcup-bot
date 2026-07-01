@@ -1417,7 +1417,7 @@
       "result": null,
       "poll_id": "6206426118669468769",
       "poll_message_id": 569,
-      "locked": false
+      "locked": true
     },
     "WC2683": {
       "home_team": "Spain",
