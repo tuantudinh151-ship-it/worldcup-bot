@@ -1303,10 +1303,12 @@
       "away_odds": 1.85,
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
-      "result": null,
+      "result": "away",
       "poll_id": "6203781020110553620",
       "poll_message_id": 555,
-      "locked": true
+      "locked": true,
+      "home_score": 1,
+      "away_score": 2
     },
     "WC2649": {
       "home_team": "France",
@@ -2137,11 +2139,11 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 3750000
+      "debt": 3850000
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 4250000
+      "debt": 4350000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
@@ -2149,7 +2151,7 @@
     },
     "1142379559": {
       "name": "Duke",
-      "debt": 3550000
+      "debt": 3650000
     }
   },
   "members": {
