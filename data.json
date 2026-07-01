@@ -1402,7 +1402,7 @@
       "result": null,
       "poll_id": "6206426118669468767",
       "poll_message_id": 567,
-      "locked": false
+      "locked": true
     },
     "WC2679": {
       "home_team": "Belgium",
