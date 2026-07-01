@@ -1381,7 +1381,7 @@
       "result": null,
       "poll_id": "6203781020110553629",
       "poll_message_id": 564,
-      "locked": false
+      "locked": true
     },
     "WC2676": {
       "home_team": "England",
