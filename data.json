@@ -1432,7 +1432,7 @@
       "result": null,
       "poll_id": "6210929812786119305",
       "poll_message_id": 579,
-      "locked": false
+      "locked": true
     },
     "WC2688": {
       "home_team": "Portugal",
