@@ -1340,7 +1340,7 @@
       "result": null,
       "poll_id": "6206426118669468775",
       "poll_message_id": 572,
-      "locked": false
+      "locked": true
     },
     "WC2664": {
       "home_team": "Australia",
