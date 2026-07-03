@@ -1452,10 +1452,12 @@
       "away_odds": 1.97,
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
-      "result": null,
+      "result": "home",
       "poll_id": "6210929812786119307",
       "poll_message_id": 582,
-      "locked": true
+      "locked": true,
+      "home_score": 2,
+      "away_score": 1
     },
     "WC2694": {
       "home_team": "Switzerland",
@@ -2175,11 +2177,11 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 4450000
+      "debt": 4550000
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 4950000
+      "debt": 5050000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
@@ -2187,7 +2189,7 @@
     },
     "1142379559": {
       "name": "Duke",
-      "debt": 4250000
+      "debt": 4350000
     }
   },
   "members": {
