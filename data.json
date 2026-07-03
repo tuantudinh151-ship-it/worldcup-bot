@@ -1357,7 +1357,7 @@
       "result": null,
       "poll_id": "6213181612599805019",
       "poll_message_id": 587,
-      "locked": false
+      "locked": true
     },
     "WC2673": {
       "home_team": "Argentina",
