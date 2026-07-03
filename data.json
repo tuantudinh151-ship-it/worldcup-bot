@@ -1462,7 +1462,7 @@
       "result": null,
       "poll_id": "6210929812786119320",
       "poll_message_id": 584,
-      "locked": false
+      "locked": true
     },
     "WC2701": {
       "home_team": "Colombia",
