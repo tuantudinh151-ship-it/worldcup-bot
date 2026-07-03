@@ -1372,7 +1372,7 @@
       "result": null,
       "poll_id": "6213181612599805022",
       "poll_message_id": 590,
-      "locked": false
+      "locked": true
     },
     "WC2674": {
       "home_team": "Mexico",
