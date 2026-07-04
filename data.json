@@ -1586,6 +1586,36 @@
       "poll_id": null,
       "poll_message_id": null,
       "locked": false
+    },
+    "WC2723": {
+      "home_team": "Argentina",
+      "away_team": "Egypt",
+      "kickoff": "2026-07-07T23:00:00+07:00",
+      "round": "knockout",
+      "handicap": -1.5,
+      "home_odds": 2.09,
+      "away_odds": 1.83,
+      "bookmaker": "Pinnacle",
+      "has_draw_option": false,
+      "result": null,
+      "poll_id": null,
+      "poll_message_id": null,
+      "locked": false
+    },
+    "WC2725": {
+      "home_team": "Switzerland",
+      "away_team": "Colombia",
+      "kickoff": "2026-07-08T03:00:00+07:00",
+      "round": "knockout",
+      "handicap": 0.25,
+      "home_odds": 2.0,
+      "away_odds": 1.91,
+      "bookmaker": "Pinnacle",
+      "has_draw_option": false,
+      "result": null,
+      "poll_id": null,
+      "poll_message_id": null,
+      "locked": false
     }
   },
   "predictions": {
