@@ -1510,7 +1510,7 @@
       "result": null,
       "poll_id": "6215037613997294926",
       "poll_message_id": 602,
-      "locked": false
+      "locked": true
     },
     "WC2704": {
       "home_team": "Paraguay",
