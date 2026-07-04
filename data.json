@@ -1371,10 +1371,12 @@
       "away_odds": 2.05,
       "bookmaker": "Pinnacle",
       "has_draw_option": true,
-      "result": null,
+      "result": "away",
       "poll_id": "6213181612599805022",
       "poll_message_id": 590,
-      "locked": true
+      "locked": true,
+      "home_score": 3,
+      "away_score": 2
     },
     "WC2674": {
       "home_team": "Mexico",
@@ -2283,19 +2285,19 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 4750000
+      "debt": 4850000
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 5250000
+      "debt": 5350000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
-      "debt": 2950000
+      "debt": 3050000
     },
     "1142379559": {
       "name": "Duke",
-      "debt": 4550000
+      "debt": 4650000
     }
   },
   "members": {
