@@ -1489,7 +1489,7 @@
       "result": null,
       "poll_id": "6213181612599805025",
       "poll_message_id": 593,
-      "locked": false
+      "locked": true
     },
     "WC2702": {
       "home_team": "Canada",
