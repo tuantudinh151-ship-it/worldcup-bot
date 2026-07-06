@@ -1578,7 +1578,7 @@
       "result": null,
       "poll_id": "6222084637422781573",
       "poll_message_id": 618,
-      "locked": false
+      "locked": true
     },
     "WC2722": {
       "home_team": "USA",
