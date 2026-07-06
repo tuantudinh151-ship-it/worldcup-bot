@@ -1555,7 +1555,7 @@
       "result": null,
       "poll_id": "6219832837609095993",
       "poll_message_id": 615,
-      "locked": false
+      "locked": true
     },
     "WC2716": {
       "home_team": "Portugal",
