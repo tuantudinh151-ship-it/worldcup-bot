@@ -1593,7 +1593,7 @@
       "result": null,
       "poll_id": "6222084637422781579",
       "poll_message_id": 621,
-      "locked": false
+      "locked": true
     },
     "WC2723": {
       "home_team": "Argentina",
@@ -1621,8 +1621,8 @@
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
       "result": null,
-      "poll_id": "6224437046845375601",
-      "poll_message_id": 630,
+      "poll_id": null,
+      "poll_message_id": null,
       "locked": false
     }
   },
