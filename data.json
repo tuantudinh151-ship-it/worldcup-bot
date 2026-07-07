@@ -1608,7 +1608,7 @@
       "result": null,
       "poll_id": "6224437046845375596",
       "poll_message_id": 628,
-      "locked": false
+      "locked": true
     },
     "WC2725": {
       "home_team": "Switzerland",
