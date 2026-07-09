@@ -1626,10 +1626,12 @@
       "away_odds": 1.93,
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
-      "result": null,
+      "result": "home",
       "poll_id": null,
       "poll_message_id": null,
-      "locked": false
+      "locked": false,
+      "home_score": 0,
+      "away_score": 0
     }
   },
   "predictions": {
@@ -2355,19 +2357,19 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 5550000
+      "debt": 5650000
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 6150000
+      "debt": 6250000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
-      "debt": 3750000
+      "debt": 3850000
     },
     "1142379559": {
       "name": "Duke",
-      "debt": 5450000
+      "debt": 5550000
     }
   },
   "members": {
