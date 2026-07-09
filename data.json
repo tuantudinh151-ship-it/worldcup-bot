@@ -1592,10 +1592,12 @@
       "away_odds": 2.03,
       "bookmaker": "Pinnacle",
       "has_draw_option": true,
-      "result": null,
+      "result": "away",
       "poll_id": "6222084637422781579",
       "poll_message_id": 621,
-      "locked": true
+      "locked": true,
+      "home_score": 1,
+      "away_score": 4
     },
     "WC2723": {
       "home_team": "Argentina",
@@ -2351,19 +2353,19 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 5450000
+      "debt": 5550000
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 5950000
+      "debt": 6050000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
-      "debt": 3550000
+      "debt": 3650000
     },
     "1142379559": {
       "name": "Duke",
-      "debt": 5250000
+      "debt": 5350000
     }
   },
   "members": {
