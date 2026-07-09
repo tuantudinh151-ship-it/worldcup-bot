@@ -1609,10 +1609,12 @@
       "away_odds": 1.83,
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
-      "result": null,
+      "result": "away",
       "poll_id": "6224437046845375596",
       "poll_message_id": 628,
-      "locked": true
+      "locked": true,
+      "home_score": 3,
+      "away_score": 2
     },
     "WC2725": {
       "home_team": "Switzerland",
@@ -2357,15 +2359,15 @@
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 6050000
+      "debt": 6150000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
-      "debt": 3650000
+      "debt": 3750000
     },
     "1142379559": {
       "name": "Duke",
-      "debt": 5350000
+      "debt": 5450000
     }
   },
   "members": {
