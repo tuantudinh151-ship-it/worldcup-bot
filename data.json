@@ -1575,10 +1575,12 @@
       "away_odds": 1.88,
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
-      "result": null,
+      "result": "away",
       "poll_id": "6222084637422781573",
       "poll_message_id": 618,
-      "locked": true
+      "locked": true,
+      "home_score": 0,
+      "away_score": 1
     },
     "WC2722": {
       "home_team": "USA",
@@ -2349,19 +2351,19 @@
   "players": {
     "1216368366": {
       "name": "Dinh Tu",
-      "debt": 5350000
+      "debt": 5450000
     },
     "1737600470": {
       "name": "Maverick Mason",
-      "debt": 5850000
+      "debt": 5950000
     },
     "1631200826": {
       "name": "LDD 🐾 🌱",
-      "debt": 3450000
+      "debt": 3550000
     },
     "1142379559": {
       "name": "Duke",
-      "debt": 5150000
+      "debt": 5250000
     }
   },
   "members": {
