@@ -1661,7 +1661,7 @@
       "result": null,
       "poll_id": "6232988464170664772",
       "poll_message_id": 638,
-      "locked": false
+      "locked": true
     },
     "WC2731": {
       "home_team": "Norway",
