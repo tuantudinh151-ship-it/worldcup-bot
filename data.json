@@ -1689,8 +1689,8 @@
       "bookmaker": "Pinnacle",
       "has_draw_option": false,
       "result": null,
-      "poll_id": null,
-      "poll_message_id": null,
+      "poll_id": "6237519633193108708",
+      "poll_message_id": 643,
       "locked": false
     }
   },
