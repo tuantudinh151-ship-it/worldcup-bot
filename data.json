@@ -1691,7 +1691,7 @@
       "result": null,
       "poll_id": "6237519633193108708",
       "poll_message_id": 643,
-      "locked": false
+      "locked": true
     }
   },
   "predictions": {
